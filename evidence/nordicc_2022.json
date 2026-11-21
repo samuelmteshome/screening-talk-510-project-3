@@ -1,0 +1,30 @@
+{
+  "source": "NordICC, Effect of Colonoscopy Screening on Risks of Colorectal Cancer and Related Death, NEJM 2022;387:1547-1556",
+  "url": "https://pubmed.ncbi.nlm.nih.gov/36214590/",
+  "comparison": "One invitation to colonoscopy vs usual care",
+  "horizon_years": 10,
+  "denominator": 1000,
+  "numbers": {
+    "crc_invited": {
+      "value": 9.8,
+      "ref": "abstract 0.98%"
+    },
+    "crc_usual_care": {
+      "value": 12.0,
+      "ref": "abstract 1.20%"
+    },
+    "crc_death_invited": {
+      "value": 2.8,
+      "ref": "abstract 0.28%"
+    },
+    "crc_death_usual_care": {
+      "value": 3.1,
+      "ref": "abstract 0.31%"
+    },
+    "share_screened_pct": {
+      "value": 42.0,
+      "ref": "abstract"
+    }
+  },
+  "verified_by": null
+}

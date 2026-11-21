@@ -1,0 +1,30 @@
+{
+  "source": "Yusuf et al., HOPE-3 cholesterol arm, NEJM 2016",
+  "url": "https://www.nejm.org/doi/full/10.1056/NEJMoa1600176",
+  "comparison": "Rosuvastatin 10 mg vs placebo",
+  "horizon_years": 5.6,
+  "denominator": 1000,
+  "numbers": {
+    "cv_death_mi_stroke_statin": {
+      "value": 37,
+      "ref": "ACC summary 3.7%; confirm"
+    },
+    "cv_death_mi_stroke_placebo": {
+      "value": 48,
+      "ref": "ACC summary 4.8%; confirm"
+    },
+    "new_diabetes_statin": {
+      "value": 39,
+      "ref": "ACC summary; confirm"
+    },
+    "new_diabetes_placebo": {
+      "value": 38,
+      "ref": "ACC summary; confirm"
+    },
+    "muscle_symptoms": {
+      "value": null,
+      "ref": "TODO safety table"
+    }
+  },
+  "verified_by": null
+}

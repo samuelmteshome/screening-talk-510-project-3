@@ -1,0 +1,22 @@
+topic: heart
+model: logistic_regression
+data:
+  cycles: [1999-2000, 2001-2002, 2003-2004, 2005-2006, 2007-2008]
+  mortality_file: NHANES_<cycle>_MORT_2019_PUBLIC.dat
+  age_min: 40
+  age_max: 75
+  target: cvd_death_10y       # MORTSTAT==1 and UCOD_LEADING in {heart, cerebrovascular} and PERMTH_EXM<=120
+  ucod_codes: [<verify>]      # check the public-use codebook before use
+  exclude_prior_cvd: true
+  clean_uri: gs://<bucket>/clean/heart/v1/clean.parquet
+  clean_sha256: <hash>
+split:
+  train_cycles: [1999-2000, 2001-2002, 2003-2004]
+  val_cycles: [2005-2006]
+  test_cycles: [2007-2008]
+features: [age, sex, race_eth, total_chol, hdl, sbp, on_bp_meds, diabetes, current_smoker]
+serve:
+  model_uri: gs://<bucket>/models/<run_id>/model.joblib
+  display_age_min: 40
+  display_age_max: 75
+  evidence_file: evidence/hope3_2016.json

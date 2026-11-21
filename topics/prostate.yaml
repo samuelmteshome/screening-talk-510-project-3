@@ -1,0 +1,26 @@
+topic: prostate
+model: logistic_regression
+data:
+  nhanes_files: [L11PSA_B, L11PSA_C, PSA_D, PSA_E, PSA_F]   # plus DEMO and BMX for each cycle
+  cycles: [2001-2002, 2003-2004, 2005-2006, 2007-2008, 2009-2010]
+  age_min: 50
+  age_max: 69
+  target: raised_psa          # 1 if LBXP1 >= psa_threshold_ng_ml
+  psa_threshold_ng_ml: 4.0
+  exclude_if_yes: [KIQ201, KIQ115, KIQ185, KIQ190_or_KIQ191, KIQ195]
+  clean_uri: gs://<bucket>/clean/prostate/v1/clean.parquet
+  clean_sha256: <hash>
+split:
+  train_cycles: [2001-2002, 2003-2004, 2005-2006]
+  val_cycles: [2007-2008]
+  test_cycles: [2009-2010]
+features: [age, race_eth, bmi]
+model_params:
+  C_grid: [0.01, 0.1, 1.0, 10.0]
+  age_spline_knots: 3
+  use_survey_weights: false
+serve:
+  model_uri: gs://<bucket>/models/<run_id>/model.joblib
+  display_age_min: 55
+  display_age_max: 69
+  evidence_file: evidence/erspc_2025.json

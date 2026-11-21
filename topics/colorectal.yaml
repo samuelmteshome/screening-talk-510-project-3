@@ -1,0 +1,6 @@
+topic: colorectal
+model: none
+serve:
+  display_age_min: 55
+  display_age_max: 64
+  evidence_file: evidence/nordicc_2022.json

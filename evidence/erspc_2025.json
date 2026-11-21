@@ -1,0 +1,30 @@
+{
+  "source": "Roobol et al., European Study of Prostate Cancer Screening - 23-Year Follow-up, NEJM 2025",
+  "url": "https://www.nejm.org/doi/full/10.1056/NEJMoa2503223",
+  "comparison": "Invitation to PSA screening vs no invitation",
+  "horizon_years": 23,
+  "denominator": 1000,
+  "numbers": {
+    "pc_deaths_screening_group": {
+      "value": null,
+      "ref": "TODO table"
+    },
+    "pc_deaths_comparison_group": {
+      "value": null,
+      "ref": "TODO table"
+    },
+    "relative_reduction_pct": {
+      "value": 13,
+      "ref": "press release; confirm in paper"
+    },
+    "number_needed_to_invite": {
+      "value": 456,
+      "ref": "press release; confirm"
+    },
+    "number_needed_to_diagnose": {
+      "value": 12,
+      "ref": "press release; confirm"
+    }
+  },
+  "verified_by": null
+}

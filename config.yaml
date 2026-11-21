@@ -1,0 +1,8 @@
+seed: 510
+storage:
+  bucket: <bucket>
+tracking:
+  project: screening-talk
+  entity: <team>
+serve:
+  topics: [prostate, heart, colorectal]

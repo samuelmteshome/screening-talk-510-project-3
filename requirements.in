@@ -1,0 +1,13 @@
+pandas
+pyarrow
+scikit-learn
+joblib
+pyyaml
+google-cloud-storage
+wandb
+matplotlib
+fastapi
+uvicorn[standard]
+pydantic
+pytest
+httpx
