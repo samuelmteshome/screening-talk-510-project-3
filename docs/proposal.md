@@ -10,18 +10,18 @@ Module 3 project idea: a web tool that shows a patient their predicted risk, and
 
 ## Division of labor
 
-**sam makes:**
+**Alberto makes (early tasks):**
 
 1. The data pipeline: scripts that download NHANES, clean it, upload versioned data to Google Cloud Storage, and load it back for training.
-2. The heart model: 10-year risk of dying from heart disease or stroke.
-3. The `/predict` API (FastAPI) and the Dockerfile.
-4. The Cloud Run deployment and a script that tests the live API.
+2. The trial evidence files (ERSPC, HOPE-3, NordICC), with each number checked against the paper.
+3. The training and evaluation code, with every run logged to Weights & Biases.
+4. The prostate model: chance of a raised PSA result.
 
-**Alberto makes:**
+**sam makes (later tasks):**
 
-1. The training and evaluation code, with every run logged to Weights & Biases.
-2. The prostate model: chance of a raised PSA result.
-3. The trial evidence files (ERSPC, HOPE-3, NordICC), with each number checked against the paper.
+1. The heart model: 10-year risk of dying from heart disease or stroke, using Alberto's training code.
+2. The `/predict` API (FastAPI) and the Dockerfile.
+3. The Cloud Run deployment and a script that tests the live API.
 4. The Streamlit app that calls the live API.
 
 **Both:** review each other's pull requests, write the README, record the demo.
@@ -104,11 +104,11 @@ Each topic has its own `topics/<topic>.yaml` (data files, filters, target, featu
 
 | When | Step | Owner |
 | --- | --- | --- |
-| Week 1 | Repo setup, data pipeline | sam |
-| Week 1 | Evidence files, training and W&B code | Alberto |
-| Week 2 | Heart model, API, Dockerfile | sam |
-| Week 2 | Prostate model, Streamlit app | Alberto |
-| Week 3 | Cloud Run deployment, smoke test | sam |
+| Week 1 | Data pipeline, evidence files | Alberto |
+| Week 1 | Repo setup, API skeleton, Dockerfile | sam |
+| Week 2 | Training and W&B code, prostate model | Alberto |
+| Week 2 | Heart model, finished API | sam |
+| Week 3 | Cloud Run deployment, Streamlit app | sam |
 | Week 3 | Final test run, README, demo | Both |
 
 If time runs short, the heart model is cut and heart becomes evidence only.
