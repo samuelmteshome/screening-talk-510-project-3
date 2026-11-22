@@ -36,15 +36,22 @@ BAR = "#2563eb"
 
 
 def _bins(series: pd.Series) -> pd.Series:
-    """Categories for a feature: as-is for categorical/binary, quintiles for continuous."""
-    if not is_numeric_dtype(series) or series.nunique() <= 6:
-        return series.astype("string")
-    return pd.qcut(series, 5, duplicates="drop").astype("string")
+    """Readable, ordered groups: Yes/No for flags, as-is for categories, quintiles like "40-45" for numbers."""
+    if not is_numeric_dtype(series):
+        return series.map(lambda v: v if pd.isna(v) else str(v).replace("_", " ").capitalize())
+    if series.nunique() <= 2:
+        return series.map({1: "Yes", 0: "No", 1.0: "Yes", 0.0: "No"})
+    q = pd.qcut(series, 5, duplicates="drop")
+    labels = [f"{iv.left:.0f} to {iv.right:.0f}" for iv in q.cat.categories]
+    labels[0] = f"Under {q.cat.categories[0].right:.0f}"
+    labels[-1] = f"Over {q.cat.categories[-1].left:.0f}"
+    return q.cat.rename_categories(labels)
 
 
 def rate_by(df: pd.DataFrame, col: str) -> pd.DataFrame:
-    g = df.groupby(_bins(df[col]), dropna=True, observed=True)["target"]
-    return pd.DataFrame({"n": g.size(), "events": g.sum(), "per_1000": (g.mean() * 1000).round(1)})
+    g = df.groupby(_bins(df[col]), dropna=True, observed=True, sort=True)["target"]
+    return pd.DataFrame({"n": g.size().astype(int), "events": g.sum().astype(int),
+                         "per_1000": (g.mean() * 1000).round(1)})
 
 
 def bar(ax, table: pd.DataFrame, title: str) -> None:
@@ -72,7 +79,7 @@ def univariate(df: pd.DataFrame, features: list[str]) -> pd.DataFrame:
             xa = pd.DataFrame({"age": d["age"], f: z / scale})
             coef = LogisticRegression(max_iter=1000, C=1e6).fit(xa, d["target"]).coef_[0][1]
             row["Age-adjusted odds ratio"] = round(float(np.exp(coef)), 2)
-            row["per"] = "1 SD" if scale != 1.0 else "yes vs no"
+            row["per"] = "1 SD" if scale != 1.0 else ("men vs women" if f == "sex" else "yes vs no")
         rows.append(row)
     return pd.DataFrame(rows)
 
