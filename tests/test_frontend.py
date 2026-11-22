@@ -88,3 +88,33 @@ def test_search_routes_to_heart_action():
     assert [t.id for t in search("aspirin", "female")] == ["heart"]
     assert ha.action_for_query("Blood Pressure") == "bp"
     assert ha.action_for_query("Statin") == "statin"
+
+
+def test_flowchart_lists_only_options_with_data():
+    import flowchart
+    import heart_actions as ha
+    tree = flowchart.options_for("heart")
+    assert [o.id for o in tree["medications"]] == ["statin", "bp", "aspirin"]
+    assert [o.id for o in tree["screening"]] == ["checkups"]
+    assert "medications" not in flowchart.options_for("colorectal")
+    for o in flowchart.OPTIONS:
+        if o.topic == "heart":
+            assert o.id in ha.ACTIONS
+
+
+def test_flowchart_expands_branch_and_links_options():
+    import flowchart
+    closed, _ = flowchart.render("heart", {"sex": "male", "age": "50", "organ": "heart"}, None, None)
+    assert "Statin" not in closed and "Medications" in closed
+    opened, _ = flowchart.render("heart", {"sex": "male", "age": "50", "organ": "heart"}, "medications", None)
+    assert "Statin (cholesterol medicine)" in opened
+    assert "branch=medications&amp;action=statin" in opened
+
+
+def test_flowchart_search_matches_medicines_and_respects_sex():
+    import flowchart
+    top = flowchart.search("atorva", "male")[0]
+    assert (top.topic, top.branch, top.action) == ("heart", "medications", "statin")
+    assert flowchart.search("psa", "female") == []
+    assert any(m.action == "psa" for m in flowchart.search("psa", "male"))
+    assert any(m.branch == "medications" and m.action is None for m in flowchart.search("medic", "female"))

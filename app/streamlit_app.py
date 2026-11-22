@@ -1,6 +1,7 @@
 """Screening Talk front end.
 
-Flow: intake form -> animated body map (click an organ or search) -> topic page
+Flow: intake form -> animated body map (click an organ or search) -> organ flowchart
+(Medications / Screening -> each option we have data for) -> option page
 with the model's prediction (from the live API) next to the trial evidence.
 State lives in the URL query string, so organ links and the back button work.
 
@@ -20,12 +21,14 @@ import streamlit.components.v1 as components
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import body_map  # noqa: E402
+import flowchart  # noqa: E402
 import heart_actions as ha  # noqa: E402
 from catalog import (  # noqa: E402
-    HISTORY_QUESTIONS, TOPICS, chart_rows, eligibility, load_evidence, number_rows, search, search_options, topics_for,
+    HISTORY_QUESTIONS, TOPICS, chart_rows, eligibility, load_evidence, number_rows, topics_for,
 )
 
-TITLE = "Find Out How a Screening or Medication Will Impact You and Your Life"
+TITLE = "Understand the Impact of Preventative Care"
+SUBTITLE = "Find out how a screening or medication would change your own chances."
 RACE_OPTIONS = {
     "Prefer not to say": None,
     "Non-Hispanic White": "non_hispanic_white",
@@ -40,6 +43,7 @@ HEART_FIELDS = ("total_chol", "hdl", "sbp", "on_bp_meds", "diabetes", "current_s
 st.set_page_config(page_title="Screening Talk", page_icon="🩺", layout="centered")
 st.markdown("""<style>
 h1 { font-size: 2.1rem !important; line-height: 1.2 !important; letter-spacing: -0.01em; }
+.stButton button[kind="tertiary"] { justify-content:flex-start; padding:.15rem .5rem; color:#0f172a; }
 .eyebrow { color:#e11d48; font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:.8rem; margin-bottom:-.6rem; }
 </style>""", unsafe_allow_html=True)
 qp = st.query_params
@@ -65,6 +69,7 @@ def profile() -> dict:
 # ---------- Step 1: intake ----------
 def intake() -> None:
     st.title(TITLE)
+    st.caption(SUBTITLE)
     st.write("Answer a few questions. Nothing you enter is stored.")
     with st.form("intake"):
         sex = st.radio("Are you a man or a woman?", ["Man", "Woman"], horizontal=True)
@@ -101,25 +106,15 @@ def intake() -> None:
 def body_page(sex: str, age: int) -> None:
     st.markdown('<p class="eyebrow">Screening Talk</p>', unsafe_allow_html=True)
     st.title(TITLE)
+    st.caption(SUBTITLE)
     who = "man" if sex == "male" else "woman"
-    st.caption(f"Showing results for a {age}-year-old {who}. Tap an organ, or search below.")
+    st.caption(f"Showing results for a {age}-year-old {who}. Tap an organ, or search.")
+    search_box(sex, "body")
     topics = topics_for(sex)
     off = frozenset(t.id for t in topics if not eligibility(t, age, history())[0])
     components.html(body_map.render(sex, topics, profile(), off), height=760)
     if off:
         st.caption("Grey organs are outside the groups our data covers for you. Click one to see why.")
-
-    pick = st.selectbox("Search for an organ, test, or medicine", [""] + search_options(sex),
-                        format_func=lambda s: s or "Type to search, e.g. PSA, statin, colonoscopy")
-    if pick:
-        hits = search(pick, sex)
-        if hits:
-            qp["organ"] = hits[0].id
-            action = ha.action_for_query(pick) if hits[0].id == "heart" else None
-            if action:
-                qp["action"] = action
-            st.rerun()
-        st.info("No results for that yet.")
 
     cols = st.columns(len(topics))
     for col, t in zip(cols, topics):
@@ -133,7 +128,40 @@ def body_page(sex: str, age: int) -> None:
         st.rerun()
 
 
-# ---------- Step 3: topic page ----------
+def go(m: flowchart.Match) -> None:
+    for k in ("branch", "action"):
+        if k in qp:
+            del qp[k]
+    qp["organ"] = m.topic
+    if m.branch:
+        qp["branch"] = m.branch
+    if m.action:
+        qp["action"] = m.action
+    st.rerun()
+
+
+def search_box(sex: str, key: str) -> None:
+    """Type a medicine, test, or organ; matches appear underneath. One clear match opens it directly."""
+    q = st.text_input("Search for a medicine, screening test, or organ", key=f"q_{key}",
+                      placeholder="e.g. statin, aspirin, PSA, colonoscopy")
+    if not q:
+        return
+    hits = flowchart.search(q, sex)
+    if not hits:
+        st.caption("No matches yet. Try a medicine name, a test, or an organ.")
+        return
+    exact = [h for h in hits if h.action and q.strip().lower() in
+             (flowchart.find_option(h.topic, h.action).aliases + (h.action,))]
+    if len(exact) == 1 and st.session_state.get(f"opened_{key}") != q:
+        st.session_state[f"opened_{key}"] = q
+        go(exact[0])
+    st.caption("Matches")
+    for i, h in enumerate(hits[:6]):
+        if st.button(h.label, key=f"hit_{key}_{i}", type="tertiary", icon=":material/arrow_forward:"):
+            go(h)
+
+
+# ---------- Step 3: organ flowchart and option page ----------
 def prediction(topic_id: str) -> dict | None:
     url = api_url()
     if not url:
@@ -154,11 +182,11 @@ def prediction(topic_id: str) -> dict | None:
 
 def topic_page(topic_id: str, age: int) -> None:
     t = TOPICS[topic_id]
-    st.title(f"{t.organ}: {t.tool}")
+    st.title(t.organ)
     if st.button("← Back to body map"):
-        del qp["organ"]
-        if "action" in qp:
-            del qp["action"]
+        for k in ("organ", "branch", "action"):
+            if k in qp:
+                del qp[k]
         st.rerun()
 
     ok, why = eligibility(t, age, history())
@@ -168,12 +196,26 @@ def topic_page(topic_id: str, age: int) -> None:
             show_evidence(t)
         return
 
-    st.subheader("Your prediction")
-    if not t.has_model:
-        st.write("No prediction model for this topic. We show what the trial found.")
+    branch = qp.get("branch") if qp.get("branch") in flowchart.BRANCHES else None
+    option = flowchart.find_option(t.id, qp.get("action"))
+    if option:
+        branch = option.branch
+    html, height = flowchart.render(t.id, dict(qp), branch, option.id if option else None)
+    components.html(html, height=height)
+    if not option:
+        st.caption("Tap Medications or Screening, then pick an option. Or search:")
+        search_box(str(profile()["sex"]), "topic")
+        return
+
+    result = prediction(t.id) if t.has_model else None
+    if t.id == "heart":
+        heart_choices(result, option.id)
     else:
-        result = prediction(t.id)
-        if result and result.get("in_supported_range", True) and result.get("prediction"):
+        st.header(option.label)
+        st.subheader("Your prediction")
+        if not t.has_model:
+            st.write("No prediction model for this topic. We show what the trial found.")
+        elif result and result.get("in_supported_range", True) and result.get("prediction"):
             per_100 = result["prediction"].get("per_100")
             st.metric("Out of 100 people like you", f"about {per_100}")
             if t.id == "prostate":
@@ -181,19 +223,16 @@ def topic_page(topic_id: str, age: int) -> None:
                            "This is a test result, not a cancer diagnosis.")
         else:
             st.write("The prediction service isn't connected yet.")
-        if t.id == "heart":
-            heart_choices(result)
-
-    st.subheader("What the research found")
-    show_evidence(t)
+        st.subheader("What the research found")
+        show_evidence(t)
     st.divider()
     st.caption("Averages from research studies, not a promise for one person. "
                "Use this to start a conversation with your doctor.")
 
 
-def heart_choices(result: dict | None) -> None:
+def heart_choices(result: dict | None, action: str) -> None:
     """Per-action page: what a statin, BP medicine, aspirin, or checkups would change for this person."""
-    st.subheader("What would change if you...")
+    st.subheader(f"If you {ha.ACTIONS[action][0].lower()}{ha.ACTIONS[action][1:]}")
     pred = (result or {}).get("prediction", {})
     death = pred.get("risk_cv_death_10y")
     event = pred.get("risk_event_10y")
@@ -203,10 +242,6 @@ def heart_choices(result: dict | None) -> None:
                 "or stroke and 3 in 100 chance of dying from one in the next 10 years.")
         event, death = 0.10, 0.03
 
-    keys = list(ha.ACTIONS)
-    start = keys.index(qp["action"]) if qp.get("action") in keys else 0
-    action = st.radio("Choose an option", keys, index=start, format_func=ha.ACTIONS.get, horizontal=False)
-    qp["action"] = action
     eff = ha.load_effects()[action]
     e = eff["effects"]
 
