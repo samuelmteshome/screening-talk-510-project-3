@@ -17,7 +17,29 @@ prostate:
   cystoscopy_4wk: {allowed: [1, 2, 7, 9], nullable: true}
   prior_prostate_cancer: {allowed: [1, 2, 7, 9], nullable: true}
 
-# TODO sam: rewrite in the format above once heart.yaml lists every column.
-# Previous list: SEQN, RIAGENDR, RIDAGEYR, RIDRETH1, LBXTC, LBDHDL, BPXSY1,
-# ELIGSTAT, MORTSTAT, UCOD_LEADING, PERMTH_EXM (HDL name differs by cycle).
-heart: {}
+heart:
+  SEQN: {min: 1}
+  sex: {allowed: [1, 2]}
+  age: {min: 0, max: 85}
+  race_eth: {allowed: [1, 2, 3, 4, 5]}
+  exam_weight: {min: 0}
+  bmi: {min: 5, max: 200, nullable: true}
+  total_chol: {min: 40, max: 1000, nullable: true}   # mg/dL
+  hdl: {min: 5, max: 300, nullable: true}            # mg/dL
+  sbp_1: {min: 50, max: 300, nullable: true}         # mmHg
+  sbp_2: {min: 50, max: 300, nullable: true}
+  sbp_3: {min: 50, max: 300, nullable: true}
+  told_high_bp: {allowed: [1, 2, 7, 9], nullable: true}
+  bp_meds_now: {allowed: [1, 2, 7, 9], nullable: true}       # asked only if told_high_bp == 1
+  diabetes_told: {allowed: [1, 2, 3, 7, 9], nullable: true}  # 3 = borderline
+  smoked_100: {allowed: [1, 2, 7, 9], nullable: true}
+  smoke_now: {allowed: [1, 2, 3, 7, 9], nullable: true}      # 1 every day, 2 some days, 3 not at all
+  chf: {allowed: [1, 2, 7, 9], nullable: true}
+  chd: {allowed: [1, 2, 7, 9], nullable: true}
+  angina: {allowed: [1, 2, 7, 9], nullable: true}
+  heart_attack: {allowed: [1, 2, 7, 9], nullable: true}
+  stroke: {allowed: [1, 2, 7, 9], nullable: true}
+  eligstat: {allowed: [1, 2, 3], nullable: true}             # 1 eligible for linkage; missing = not in mortality file
+  mortstat: {allowed: [0, 1], nullable: true}
+  ucod_leading: {allowed: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nullable: true}
+  permth_exm: {min: 0, max: 300, nullable: true}

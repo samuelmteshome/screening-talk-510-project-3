@@ -36,10 +36,33 @@ class SchemaError(ValueError):
     """A raw file is missing a column, or a value breaks schema.yaml."""
 
 
+# Column positions in the 2019 public-use linked mortality files (fixed width,
+# 1-based inclusive, from the NCHS read-in programs for NHANES).
+MORTALITY_COLUMNS = {
+    "SEQN": (1, 6),
+    "ELIGSTAT": (15, 15),
+    "MORTSTAT": (16, 16),
+    "UCOD_LEADING": (17, 19),
+    "DIABETES": (20, 20),
+    "HYPERTEN": (21, 21),
+    "PERMTH_INT": (43, 45),
+    "PERMTH_EXM": (46, 48),
+}
+
+
+def read_mortality(path: Path) -> pd.DataFrame:
+    """Read a linked mortality .dat file into numeric columns ('.' and blanks become NaN)."""
+    colspecs = [(start - 1, end) for start, end in MORTALITY_COLUMNS.values()]
+    df = pd.read_fwf(path, colspecs=colspecs, names=list(MORTALITY_COLUMNS), dtype=str)
+    return df.apply(lambda col: pd.to_numeric(col.str.strip().replace({".": None, "": None}), errors="coerce"))
+
+
 def read_raw(path: Path) -> pd.DataFrame:
-    """Read a raw NHANES file (.xpt, or .csv for test fixtures)."""
+    """Read a raw NHANES file (.xpt, .dat linked mortality, or .csv for test fixtures)."""
     if path.suffix.lower() == ".csv":
         return pd.read_csv(path)
+    if path.suffix.lower() == ".dat":
+        return read_mortality(path)
     return pd.read_sas(path, format="xport", encoding=None)  # all columns used are numeric
 
 
@@ -128,11 +151,56 @@ def build_prostate(df: pd.DataFrame, cfg: dict[str, Any]) -> tuple[pd.DataFrame,
     return out, counts
 
 
-def build_heart(df: pd.DataFrame, cfg: dict[str, Any]):
-    raise NotImplementedError(
-        "Heart cleaning rules are on sam's task list: add the 10-year CVD death target "
-        "from the linked mortality file here."
+def _yes(col: pd.Series) -> pd.Series:
+    return (col == YES).astype("int64")
+
+
+def build_heart(df: pd.DataFrame, cfg: dict[str, Any]) -> tuple[pd.DataFrame, list[tuple[str, int]]]:
+    """Adults in the age range with no prior heart disease or stroke, linked to death
+    records; target = died of heart disease or stroke within horizon_months of the exam."""
+    data = cfg["data"]
+    counts = [("All participants in the merged files", len(df))]
+    df = df[df["age"].between(data["age_min"], data["age_max"])]
+    counts.append((f"Aged {data['age_min']} to {data['age_max']}", len(df)))
+    df = df[df["exam_weight"] > 0]
+    counts.append(("Had the physical exam (exam weight > 0)", len(df)))
+    df = df[df["eligstat"] == 1]
+    counts.append(("Eligible for death-record linkage", len(df)))
+    prior = (df[data["exclude_prior_cvd"]] == YES).any(axis=1)
+    df = df[~prior]
+    counts.append(("No prior heart failure, heart disease, angina, heart attack, or stroke", len(df)))
+    horizon = data["horizon_months"]
+    cvd_death = (df["mortstat"] == 1) & df["ucod_leading"].isin(data["ucod_codes"]) & (df["permth_exm"] <= horizon)
+    # Alive people followed for less than the horizon have an unknown outcome (should be none: follow-up runs to 2019).
+    unknown = (df["mortstat"] == 0) & (df["permth_exm"] < horizon)
+    df, cvd_death = df[~unknown], cvd_death[~unknown]
+    counts.append((f"Followed at least {horizon} months or died", len(df)))
+
+    sbp = df[["sbp_1", "sbp_2", "sbp_3"]].mean(axis=1, skipna=True)
+    out = pd.DataFrame(
+        {
+            "SEQN": df["SEQN"].astype("int64"),
+            "cycle": df["cycle"],
+            "target": cvd_death.astype("int64"),
+            "exam_weight": df["exam_weight"].astype("float64"),
+            "age": df["age"].astype("float64"),
+            "sex": df["sex"].map({1: "male", 2: "female"}),
+            "race_eth": df["race_eth"].astype(int).map(RACE_ETH),
+            "bmi": df["bmi"],
+            "total_chol": df["total_chol"],
+            "hdl": df["hdl"],
+            "sbp": sbp,
+            # BPQ050A is only asked of people told they have high blood pressure.
+            "on_bp_meds": _yes(df["bp_meds_now"]),
+            "diabetes": _yes(df["diabetes_told"]),
+            # Never-smokers (SMQ020 = 2) skip SMQ040; every day (1) or some days (2) = current smoker.
+            "current_smoker": df["smoke_now"].isin([1, 2]).astype("int64"),
+            "died_any_cause_10y": ((df["mortstat"] == 1) & (df["permth_exm"] <= horizon)).astype("int64"),
+            "followup_months": df["permth_exm"],
+        }
     )
+    counts.append((f"Target: died of heart disease or stroke within {horizon // 12} years", int(out["target"].sum())))
+    return out, counts
 
 
 BUILDERS: dict[str, Callable[[pd.DataFrame, dict[str, Any]], tuple[pd.DataFrame, list]]] = {
