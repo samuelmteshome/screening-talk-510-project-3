@@ -22,6 +22,8 @@ split:
   val_cycles: [2005-2006]
   test_cycles: [2007-2008]
 # Candidate features; the final list is picked after the EDA (docs/eda/heart/README.md).
+# Used by the model (src/train_heart.py); picked with sam after the EDA.
+model_features: [age, sex, total_chol, hdl, sbp, on_bp_meds, diabetes, current_smoker]
 features: [age, sex, race_eth, bmi, total_chol, hdl, sbp, on_bp_meds, diabetes, current_smoker]
 feature_sources:            # canonical column -> NHANES variable, by cycle (from the codebooks)
   age: {all: RIDAGEYR}

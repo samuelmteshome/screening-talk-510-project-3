@@ -62,3 +62,19 @@ def test_eda_report_on_fixtures(tmp_path, config, heart_cfg, monkeypatch):
     text = report.read_text()
     assert "## Outcome" in text and "AUC alone" in text
     assert (tmp_path / "eda" / "event_rate_by_feature.png").exists()
+
+
+def test_train_heart_on_fixtures(tmp_path, config, heart_cfg, monkeypatch):
+    """Training runs end to end on the made-up data (values are random, so no accuracy check)."""
+    from src import train_heart
+    path = clean_topic("heart", config, heart_cfg, docs_dir=tmp_path / "docs")
+    cfg = dict(load_topic("heart"))
+    cfg["split"] = {"train_cycles": ["2001-2002"], "val_cycles": ["2005-2006"], "test_cycles": []}
+    monkeypatch.setattr(train_heart, "load_topic", lambda topic: cfg)
+    monkeypatch.setattr(train_heart, "REPO_ROOT", tmp_path)
+    monkeypatch.delenv("WANDB_API_KEY", raising=False)
+    res = train_heart.run(path)
+    assert set(res) == {"baseline_age_sex", "model"}
+    assert 0 <= res["model"]["val"]["auc"] <= 1
+    assert (tmp_path / "models" / "heart" / "model.joblib").exists()
+    assert (tmp_path / "docs" / "models" / "heart.md").exists()
