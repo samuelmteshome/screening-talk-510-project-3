@@ -39,10 +39,12 @@ BAR, BAR2 = "#2563eb", "#94a3b8"
 
 def build(features: list[str], df: pd.DataFrame) -> Pipeline:
     cat = [f for f in features if not pd.api.types.is_numeric_dtype(df[f])]
-    num = [f for f in features if f not in cat]
+    flags = [f for f in features if f not in cat and df[f].dropna().isin([0, 1]).all()]
+    num = [f for f in features if f not in cat and f not in flags]
     pre = ColumnTransformer([
         ("num", Pipeline([("impute", SimpleImputer(strategy="median", add_indicator=True)),
                           ("scale", StandardScaler())]), num),
+        ("flag", SimpleImputer(strategy="most_frequent"), flags),
         ("cat", OneHotEncoder(drop="first", handle_unknown="ignore"), cat),
     ])
     return Pipeline([("pre", pre), ("lr", LogisticRegression(max_iter=2000, C=1.0))])
@@ -113,7 +115,7 @@ def run(clean_path: Path, final: bool = False) -> dict:
         for split, m in r.items():
             lines.append(f"| {name} | {split} | {m['n']:,} | {m['events']} | {m['auc']} | {m['brier']} | "
                          f"{m['predicted_per_1000']} | {m['observed_per_1000']} |")
-    lines += ["", "![Calibration](heart_calibration_val.png)", "", "## Odds ratios (per SD for numbers)", "",
+    lines += ["", "![Calibration](heart_calibration_val.png)", "", "## Odds ratios (per SD for numbers, yes vs no for yes/no answers)", "",
               "| Term | Odds ratio |", "| --- | --- |"]
     lines += [f"| {r.term} | {r.odds_ratio} |" for r in odds_ratios(model).itertuples()]
     (out_docs / "heart.md").write_text("\n".join(lines) + "\n")
