@@ -10,6 +10,8 @@
     "life_years_per_death_avoided": {"value": 8.4, "ref": "abstract"},
     "qalys_gained_per_1000": {"value": 56, "ref": "abstract, range -21 to 97"}
   },
-  "verified_by": null,
-  "note": "Modeling study, not a trial result. Checked against the abstract on pure.eur.nl (Nov 22)."
+  "verified_by": "alberto",
+  "verified_on": "2026-11-22",
+  "verified_against": "abstract (PMC4982868, pure.eur.nl)",
+  "note": "Modeling study, not a trial result: yearly screening and lifetime follow-up, so its numbers are not comparable with the ERSPC trial's 23-year results."
 }

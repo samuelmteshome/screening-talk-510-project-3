@@ -306,7 +306,9 @@ def show_evidence(t) -> None:
             for label, value in number_rows(ev):
                 st.markdown(f"- {label.capitalize()}: **{value:g}**")
         if ev.get("verified_by") is None:
-            st.caption("Numbers not yet checked against the full paper.")
+            st.caption("Numbers not yet checked against the source.")
+        else:
+            st.caption(f"Numbers checked against the {ev.get('verified_against', 'source')}.")
 
 
 # ---------- Router ----------
