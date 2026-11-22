@@ -21,7 +21,7 @@ jobs:
       - run: python -m src.data.download --topic heart
       - run: python -m src.data.clean --topic heart
       - run: python -m src.eda --topic heart
-      - run: python -m src.train_heart
+      - run: python -m src.train_heart --final
       - name: Commit report
         run: |
           git config user.name "github-actions[bot]"
