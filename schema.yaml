@@ -8,7 +8,7 @@ prostate:
   sex: {allowed: [1, 2]}                       # RIAGENDR: 1 male, 2 female
   age: {min: 0, max: 85}                       # RIDAGEYR is top-coded at 85 or 80
   race_eth: {allowed: [1, 2, 3, 4, 5]}         # RIDRETH1
-  bmi: {min: 10, max: 130, nullable: true}
+  bmi: {min: 5, max: 200, nullable: true}       # real NHANES values go from 7.99 (2001-02) to 130.21 (2005-06)
   exam_weight: {min: 0}
   psa: {min: 0, nullable: true}                # missing for women, men under 40, ineligible men
   prostate_inflammation: {allowed: [1, 2, 7, 9], nullable: true}

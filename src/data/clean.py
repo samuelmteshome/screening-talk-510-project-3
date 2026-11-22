@@ -40,7 +40,7 @@ def read_raw(path: Path) -> pd.DataFrame:
     """Read a raw NHANES file (.xpt, or .csv for test fixtures)."""
     if path.suffix.lower() == ".csv":
         return pd.read_csv(path)
-    return pd.read_sas(path, format="xport")
+    return pd.read_sas(path, format="xport", encoding=None)  # all columns used are numeric
 
 
 def _raw_path(raw_dir: Path, topic: str, cycle: str, entry: str) -> Path:
