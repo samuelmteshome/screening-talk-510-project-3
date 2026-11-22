@@ -49,7 +49,7 @@ AUC alone: 0.5 is a coin flip, 1.0 is perfect. Odds ratio is after accounting fo
 | feature | n | AUC alone | Age-adjusted odds ratio | per |
 | --- | --- | --- | --- | --- |
 | Age (years) | 8941 | 0.712 |  |  |
-| Sex | 8941 | 0.57 | 1.81 | yes vs no |
+| Sex | 8941 | 0.57 | 1.81 | men vs women |
 | Race / ethnicity | 8941 | 0.565 |  |  |
 | BMI | 8325 | 0.494 | 1.06 | 1 SD |
 | Total cholesterol (mg/dL) | 8058 | 0.508 | 1.02 | 1 SD |
