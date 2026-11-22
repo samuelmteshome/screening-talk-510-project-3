@@ -1,0 +1,15 @@
+{
+  "source": "Heijnsdijk et al., Quality-of-Life Effects of Prostate-Specific Antigen Screening, NEJM 2012;367(7):595-605",
+  "url": "https://doi.org/10.1056/NEJMoa1201637",
+  "comparison": "Annual PSA screening ages 55-69 vs no screening, MISCAN model calibrated to ERSPC, 1000 men followed for life",
+  "horizon_years": null,
+  "denominator": 1000,
+  "numbers": {
+    "pc_deaths_prevented_per_1000": {"value": 9, "ref": "abstract (28% reduction; lifetime model, not the trial)"},
+    "life_years_gained_per_1000": {"value": 73, "ref": "abstract"},
+    "life_years_per_death_avoided": {"value": 8.4, "ref": "abstract"},
+    "qalys_gained_per_1000": {"value": 56, "ref": "abstract, range -21 to 97"}
+  },
+  "verified_by": null,
+  "note": "Modeling study, not a trial result. Checked against the abstract on pure.eur.nl (Nov 22)."
+}
