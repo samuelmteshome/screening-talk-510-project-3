@@ -53,6 +53,8 @@ def test_prior_heart_attack_blocks_heart_number():
     ok, why = eligibility(TOPICS["heart"], 39, {"prior_cvd"})
     assert not ok and "first heart attack" in why
     ok, why = eligibility(TOPICS["heart"], 39, set())
+    assert ok and "PREVENT" in why        # 30-79 falls back to the published equations
+    ok, why = eligibility(TOPICS["heart"], 25, set())
     assert not ok and "40 to 75" in why
     assert eligibility(TOPICS["heart"], 60, set()) == (True, "")
 
@@ -118,3 +120,18 @@ def test_flowchart_search_matches_medicines_and_respects_sex():
     assert flowchart.search("psa", "female") == []
     assert any(m.action == "psa" for m in flowchart.search("psa", "male"))
     assert any(m.branch == "medications" and m.action is None for m in flowchart.search("medic", "female"))
+
+
+def test_prevent_equations_behave():
+    import prevent
+    base = prevent.risk("male", 55, 207, 51, 127)
+    assert 0.01 < base < 0.10
+    assert prevent.risk("male", 65, 207, 51, 127) > base                     # older, higher
+    assert prevent.risk("male", 55, 207, 51, 127, smoker=True) > base        # smoking, higher
+    assert prevent.risk("female", 55, 207, 51, 127) < base                   # women lower at same values
+    assert prevent.risk("male", 55, 207, 51, 127, outcome="cvd") > base      # adds heart failure
+    r, missing = prevent.from_profile({"sex": "female", "age": 35})
+    assert missing == ["total_chol", "hdl", "sbp"] and r < 0.02
+    import pytest
+    with pytest.raises(ValueError):
+        prevent.risk("male", 82)

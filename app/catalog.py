@@ -25,6 +25,8 @@ class Topic:
     aliases: tuple[str, ...] = field(default_factory=tuple)
     excluded_history: str = ""   # intake flag that puts a person outside the data
     excluded_reason: str = ""    # shown instead of a number when that flag is set
+    fallback_ages: tuple[int, int] | None = None  # wider range covered by a published equation
+    fallback_note: str = ""      # shown when the published equation is used instead of our model
 
 
 TOPICS: dict[str, Topic] = {
@@ -59,6 +61,9 @@ TOPICS: dict[str, Topic] = {
         aliases=("statin", "cholesterol", "rosuvastatin", "heart attack", "stroke", "cardiac", "cardiology",
                  "aspirin", "blood pressure", "hypertension", "checkup", "primary care"),
         excluded_history="prior_cvd",
+        fallback_ages=(30, 79),
+        fallback_note=("Our model covers ages 40 to 75. For your age, these numbers come from the American "
+                       "Heart Association's PREVENT equations (built from 6.6 million US adults, ages 30 to 79)."),
         excluded_reason=("This tool predicts a first heart attack or stroke. The data left out anyone who already "
                          "had a heart attack, stroke, angina, or heart failure, so it can't give you a number. "
                          "Statins are usually recommended after these events; ask your doctor or cardiologist."),
@@ -101,6 +106,8 @@ def eligibility(topic: Topic, age: int, history: set[str]) -> tuple[bool, str]:
     if topic.excluded_history and topic.excluded_history in history:
         return False, topic.excluded_reason
     if not in_range(topic, age):
+        if topic.fallback_ages and topic.fallback_ages[0] <= age <= topic.fallback_ages[1]:
+            return True, topic.fallback_note
         return False, (f"The data for {topic.organ.lower()} covers ages {topic.age_min} to {topic.age_max}, "
                        f"so we can't give a {age}-year-old a number.")
     return True, ""

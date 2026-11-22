@@ -23,6 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import body_map  # noqa: E402
 import flowchart  # noqa: E402
 import heart_actions as ha  # noqa: E402
+import prevent  # noqa: E402
 from catalog import (  # noqa: E402
     HISTORY_QUESTIONS, TOPICS, chart_rows, eligibility, load_evidence, number_rows, topics_for,
 )
@@ -195,6 +196,8 @@ def topic_page(topic_id: str, age: int) -> None:
         with st.expander("What the research found (for people outside your group)"):
             show_evidence(t)
         return
+    if why:
+        st.info(why)
 
     branch = qp.get("branch") if qp.get("branch") in flowchart.BRANCHES else None
     option = flowchart.find_option(t.id, qp.get("action"))
@@ -232,15 +235,24 @@ def topic_page(topic_id: str, age: int) -> None:
 
 def heart_choices(result: dict | None, action: str) -> None:
     """Per-action page: what a statin, BP medicine, aspirin, or checkups would change for this person."""
-    st.subheader(f"If you {ha.ACTIONS[action][0].lower()}{ha.ACTIONS[action][1:]}")
+    st.subheader(ha.ACTIONS[action].replace("Lower my", "If you lower your").replace("Take a", "If you take a")
+                 .replace("Get regular", "If you get regular"))
     pred = (result or {}).get("prediction", {})
     death = pred.get("risk_cv_death_10y")
     event = pred.get("risk_event_10y")
+    p = profile()
+    if event is None and prevent.in_range(float(p["age"])):
+        event, missing = prevent.from_profile(p)
+        note = ("Your chance of a heart attack or stroke comes from the American Heart Association's "
+                "PREVENT equations.")
+        if missing:
+            names = {"total_chol": "cholesterol", "hdl": "HDL", "sbp": "blood pressure"}
+            note += (" You left " + ", ".join(names[m] for m in missing) + " blank, so we used typical values. "
+                     "Add yours on the first page for a closer estimate.")
+        st.caption(note)
     if death is None and event is None:
-        st.info("Your own numbers will appear here once the heart model is connected. "
-                "Until then, this section uses an **example person**: 10 in 100 chance of a heart attack "
-                "or stroke and 3 in 100 chance of dying from one in the next 10 years.")
-        event, death = 0.10, 0.03
+        st.info("Your own numbers will appear here once the heart model is connected.")
+        return
 
     eff = ha.load_effects()[action]
     e = eff["effects"]
