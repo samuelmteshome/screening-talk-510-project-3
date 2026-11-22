@@ -3,6 +3,11 @@ name: heart data, EDA and training
 # and commits the EDA report back to the branch. Raw and clean data stay out of git.
 on:
   workflow_dispatch:
+    inputs:
+      final:
+        description: "Also score the held-out test cycle (run once, after the model is chosen)"
+        type: boolean
+        default: false
   push:
     branches: ["sam/heart-**"]
     paths: ["topics/heart.yaml", "schema.yaml", "src/data/**", "src/eda.py", "src/train_heart.py", ".github/workflows/heart-data.yml"]
@@ -21,7 +26,7 @@ jobs:
       - run: python -m src.data.download --topic heart
       - run: python -m src.data.clean --topic heart
       - run: python -m src.eda --topic heart
-      - run: python -m src.train_heart --final
+      - run: python -m src.train_heart ${{ inputs.final && '--final' || '' }}
       - name: Commit report
         run: |
           git config user.name "github-actions[bot]"
