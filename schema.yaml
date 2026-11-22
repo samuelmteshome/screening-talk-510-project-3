@@ -1,10 +1,23 @@
-# Expected NHANES columns per topic. clean.py checks each raw file against this
-# and fails loudly on a missing or renamed column. Fill in per cycle (Alberto).
-# NHANES renames some variables between cycles (e.g. KIQ190 -> KIQ191).
+# Expected columns and values per topic, using the column names from
+# feature_sources in topics/<topic>.yaml. NHANES renames some variables
+# between cycles (e.g. KIQ190 -> KIQ191); feature_sources maps each cycle to
+# the right variable, and clean.py stops with a clear error if a variable is
+# missing in any cycle or a value breaks these rules.
 prostate:
-  required: [SEQN, RIAGENDR, RIDAGEYR, RIDRETH1, BMXBMI, LBXP1]
-  renamed:
-    KIQ190: {"2001-2002": KIQ190, "2009-2010": KIQ191}   # <verify> each cycle
-heart:
-  required: [SEQN, RIAGENDR, RIDAGEYR, RIDRETH1, LBXTC, LBDHDL, BPXSY1, ELIGSTAT, MORTSTAT, UCOD_LEADING, PERMTH_EXM]
-  renamed: {}   # <verify> HDL name differs by cycle (LBDHDL / LBXHDD / LBDHDD)
+  SEQN: {min: 1}
+  sex: {allowed: [1, 2]}                       # RIAGENDR: 1 male, 2 female
+  age: {min: 0, max: 85}                       # RIDAGEYR is top-coded at 85 or 80
+  race_eth: {allowed: [1, 2, 3, 4, 5]}         # RIDRETH1
+  bmi: {min: 10, max: 130, nullable: true}
+  exam_weight: {min: 0}
+  psa: {min: 0, nullable: true}                # missing for women, men under 40, ineligible men
+  prostate_inflammation: {allowed: [1, 2, 7, 9], nullable: true}
+  rectal_exam_7d: {allowed: [1, 2, 7, 9], nullable: true}
+  biopsy_4wk: {allowed: [1, 2, 7, 9], nullable: true}
+  cystoscopy_4wk: {allowed: [1, 2, 7, 9], nullable: true}
+  prior_prostate_cancer: {allowed: [1, 2, 7, 9], nullable: true}
+
+# TODO sam: rewrite in the format above once heart.yaml lists every column.
+# Previous list: SEQN, RIAGENDR, RIDAGEYR, RIDRETH1, LBXTC, LBDHDL, BPXSY1,
+# ELIGSTAT, MORTSTAT, UCOD_LEADING, PERMTH_EXM (HDL name differs by cycle).
+heart: {}
