@@ -1,0 +1,22 @@
+{
+  "baseline_age_sex": {
+    "val": {
+      "auc": 0.745,
+      "brier": 0.0205,
+      "events": 46,
+      "n": 2165,
+      "predicted_per_1000": 24.4,
+      "observed_per_1000": 21.2
+    }
+  },
+  "model": {
+    "val": {
+      "auc": 0.78,
+      "brier": 0.0203,
+      "events": 46,
+      "n": 2165,
+      "predicted_per_1000": 23.2,
+      "observed_per_1000": 21.2
+    }
+  }
+}
