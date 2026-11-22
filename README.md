@@ -20,10 +20,13 @@ cp .env.example .env   # fill in values locally; never commit .env
 
 ## Reproduce the data
 ```bash
-python -m src.data.download --topic prostate
-python -m src.data.clean    --topic prostate
-python -m src.data.upload   --topic prostate   # prints the GCS URI and SHA-256 to put in topics/prostate.yaml
+make data TOPIC=prostate    # runs the three steps below
+python -m src.data.download --topic prostate --snapshot   # CDC files -> data/raw/, dated raw copy in GCS, MANIFEST.json
+python -m src.data.clean    --topic prostate              # schema.yaml check + cleaning rules -> data/clean/, docs/cleaning/prostate.md
+python -m src.data.upload   --topic prostate --write-hash # clean parquet -> GCS, SHA-256 written to topics/prostate.yaml
 ```
+Training loads the data with `src.data.ingest`, which stops if the file's SHA-256 differs from `clean_sha256`.
+Row counts after each cleaning rule are in `docs/cleaning/<topic>.md`.
 
 ## Train
 ```bash
