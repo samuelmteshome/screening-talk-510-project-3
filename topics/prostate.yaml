@@ -15,6 +15,11 @@ split:
   val_cycles: [2007-2008]
   test_cycles: [2009-2010]
 features: [age, race_eth, bmi]
+feature_sources:            # NHANES variable per feature, by cycle (verify each)
+  age: {all: RIDAGEYR}
+  race_eth: {all: RIDRETH1}
+  bmi: {all: BMXBMI}
+  psa: {all: LBXP1}
 model_params:
   C_grid: [0.01, 0.1, 1.0, 10.0]
   age_spline_knots: 3

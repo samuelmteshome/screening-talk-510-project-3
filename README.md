@@ -54,18 +54,24 @@ Alberto owns the early pipeline work so sam can build serving on top of it.
 
 ### Alberto (early: data and training)
 - [ ] Data pipeline: `src/data/download.py`, `clean.py`, `upload.py`, `ingest.py` (versioned parquet in GCS, hash check), following `docs/data_contract.md`
+- [ ] Raw snapshot: dated copy in `gs://<bucket>/raw/<date>/`, URL, time and hash per file in `data/raw/MANIFEST.json`
+- [ ] Schema check: fill `schema.yaml`, make `clean.py` fail on missing or renamed columns; fill `feature_sources` in `topics/*.yaml`
 - [ ] Evidence files: check every number in `evidence/*.json` against the papers, fill `verified_by`
 - [ ] Training + tracking: `src/features.py`, `src/train.py`, `src/evaluate.py`, W&B logging, calibration bar chart
+- [ ] Run metadata: `runs/<run_id>/run_metadata.yaml` (git commit, Docker image, Python and package versions, seed, data hash) and a run log file uploaded to W&B
 - [ ] Prostate model: `topics/prostate.yaml`, PSA >= 4.0 target, logged W&B run
 
 ### sam (later: models on top, serving, deployment)
 - [ ] Heart model: `topics/heart.yaml`, NHANES 1999-2008 linked mortality, 10-year CVD death target, trained with Alberto's code
 - [ ] API + Docker: `src/api/` (`POST /predict`, `GET /health`, `GET /topics`), `Dockerfile`, `entrypoint.sh`, `tests/test_api.py`
+- [ ] CI: `.github/workflows/ci.yml` runs pytest on every pull request (keep it green)
 - [ ] Deployment: Cloud Run service, `scripts/smoke_test.py`, paste output below
 - [ ] Front end: `app/streamlit_app.py` calling the live API, deployed on Streamlit Community Cloud
 
 ### Both
 - [ ] Review each other's pull requests (branches `sam/...` and `alberto/...`, no direct pushes to `main`)
+- [ ] Tests for your own steps in `tests/test_pipeline_steps.py`, using small files in `tests/fixtures/`
+- [ ] Swap test: each partner reproduces the other's run from a fresh clone using only this README, and notes any gaps
 - [ ] Final test-set run per model, metrics table below
 - [ ] Demo
 

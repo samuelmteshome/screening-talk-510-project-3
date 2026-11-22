@@ -1,0 +1,10 @@
+# Expected NHANES columns per topic. clean.py checks each raw file against this
+# and fails loudly on a missing or renamed column. Fill in per cycle (Alberto).
+# NHANES renames some variables between cycles (e.g. KIQ190 -> KIQ191).
+prostate:
+  required: [SEQN, RIAGENDR, RIDAGEYR, RIDRETH1, BMXBMI, LBXP1]
+  renamed:
+    KIQ190: {"2001-2002": KIQ190, "2009-2010": KIQ191}   # <verify> each cycle
+heart:
+  required: [SEQN, RIAGENDR, RIDAGEYR, RIDRETH1, LBXTC, LBDHDL, BPXSY1, ELIGSTAT, MORTSTAT, UCOD_LEADING, PERMTH_EXM]
+  renamed: {}   # <verify> HDL name differs by cycle (LBDHDL / LBXHDD / LBDHDD)

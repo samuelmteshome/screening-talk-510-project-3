@@ -15,6 +15,16 @@ split:
   val_cycles: [2005-2006]
   test_cycles: [2007-2008]
 features: [age, sex, race_eth, total_chol, hdl, sbp, on_bp_meds, diabetes, current_smoker]
+feature_sources:            # NHANES variable per feature, by cycle (verify each)
+  age: {all: RIDAGEYR}
+  sex: {all: RIAGENDR}
+  race_eth: {all: RIDRETH1}
+  total_chol: {all: LBXTC}
+  hdl: {"1999-2002": LBDHDL, "2003-2004": LBXHDD, "2005-2008": LBDHDD}
+  sbp: {all: BPXSY1}
+  on_bp_meds: {all: BPQ050A}
+  diabetes: {all: DIQ010}
+  current_smoker: {all: SMQ040}
 serve:
   model_uri: gs://<bucket>/models/<run_id>/model.joblib
   display_age_min: 40

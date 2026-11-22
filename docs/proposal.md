@@ -4,6 +4,8 @@ Nov 21, 2026 · @sam
 
 **Due:** Nov 24, 2026. **Team:** sam and Alberto.
 
+**Repo:** [github.com/samuelmteshome/screening-talk-510-project-3](https://github.com/samuelmteshome/screening-talk-510-project-3)
+
 ## Project summary
 
 Module 3 project idea: a web tool that shows a patient their predicted risk, and what a major clinical trial found, for three preventive steps: a PSA test (prostate cancer), a statin (heart disease), and a colonoscopy (colorectal cancer). It uses public CDC NHANES datasets. It trains a logistic regression model for each topic. It runs on a config-driven, structured data pipeline: raw NHANES files are cleaned, versioned in Google Cloud Storage, trained with Weights & Biases tracking, served by a FastAPI container on Cloud Run, and shown in a public Streamlit app.
@@ -12,19 +14,19 @@ Module 3 project idea: a web tool that shows a patient their predicted risk, and
 
 **Alberto makes (early tasks):**
 
-1. The data pipeline: scripts that download NHANES, clean it, upload versioned data to Google Cloud Storage, and load it back for training.
+1. The data pipeline: scripts that download NHANES, save a dated raw snapshot, check the schema, clean it, upload versioned data to Google Cloud Storage, and load it back for training.
 2. The trial evidence files (ERSPC, HOPE-3, NordICC), with each number checked against the paper.
-3. The training and evaluation code, with every run logged to Weights & Biases.
+3. The training and evaluation code, with every run logged to Weights & Biases and a `run_metadata.yaml` plus log file saved per run.
 4. The prostate model: chance of a raised PSA result.
 
 **sam makes (later tasks):**
 
 1. The heart model: 10-year risk of dying from heart disease or stroke, using Alberto's training code.
-2. The `/predict` API (FastAPI) and the Dockerfile.
+2. The `/predict` API (FastAPI), the Dockerfile, and the GitHub Actions test workflow.
 3. The Cloud Run deployment and a script that tests the live API.
 4. The Streamlit app that calls the live API.
 
-**Both:** review each other's pull requests, write the README, record the demo.
+**Both:** review each other's pull requests, write tests for your own steps, reproduce each other's run from a fresh clone (swap test), write the README, record the demo.
 
 ## Rubric coverage
 
@@ -90,15 +92,52 @@ The numbers above are illustrative. Test locally with `docker run` and `curl`, t
 
 ## Pipeline
 
-1. `download.py`: fetch NHANES files and record their hashes.
-2. `clean.py`: merge, apply exclusions, build the target.
+1. `download.py`: fetch NHANES files, save a raw snapshot to `gs://<bucket>/raw/<date>/`, and log each URL, download time, and hash in `data/raw/MANIFEST.json`.
+2. `clean.py`: check each file against `schema.yaml` (expected columns and types per cycle; fails loudly if one is missing or renamed), merge, apply exclusions, build the target.
 3. `upload.py`: save versioned parquet to Google Cloud Storage.
 4. `ingest.py`: load from the cloud and check the hash.
-5. `train.py` and `evaluate.py`: fit the baseline and model, log to W&B, save the model to GCS.
-6. `api/main.py`: FastAPI loads the model; Docker `serve` runs it on Cloud Run.
-7. `app/streamlit_app.py`: calls the live API.
+5. `train.py` and `evaluate.py` (argparse: `--topic`, `--final`): fit the baseline and a scikit-learn `Pipeline` (preprocessing and model in one object), log to W&B, save the model to GCS.
+6. Every run writes `runs/<run_id>/run_metadata.yaml` (run ID, git commit, data version, config, seed, Python and package versions) and a log file, both uploaded to W&B.
+7. `api/main.py`: FastAPI loads the same saved `Pipeline`, so inference uses the exact training transforms; Docker `serve` runs it on Cloud Run.
+8. `app/streamlit_app.py`: calls the live API.
+9. GitHub Actions runs `pytest` on every pull request; each step has its own test on a small fixture file.
 
 Each topic has its own `topics/<topic>.yaml` (data files, filters, target, features, split), so the same code trains both models.
+
+## Pipeline principles (AIPI 510, Week 12)
+
+Each reproducibility question from the Week 12 ML Engineering slides, matched to where the project answers it. Rows marked **Added** were missing from the first plan.
+
+| Area | Principle | Project step |
+| --- | --- | --- |
+| General | Know what must be reproducible (splits, outputs, metrics) | Split fixed by survey cycle; metrics table in README |
+| General | Re-run later and get the same results | `docker run screening-talk train --topic prostate` reproduces the logged metrics |
+| General | Document dependencies, parameters, seeds | Pinned `requirements.txt`, `config.yaml`, `topics/*.yaml`, `seed: 510` |
+| Data | Raw data stored and versioned or timestamped | **Added:** raw snapshot in `gs://<bucket>/raw/<date>/` plus hashes in `MANIFEST.json` |
+| Data | Exact dataset version known | `clean_uri` and `clean_sha256` in the topic config |
+| Data | Data access method consistent and logged | **Added:** download URLs in config; URL, time, and hash logged per file |
+| Data | Handle missing or changing schemas | **Added:** `schema.yaml` check in `clean.py` (NHANES renames variables between cycles, e.g. `KIQ190` to `KIQ191`) |
+| Preprocessing | Deterministic and saved | Scaling and encoding inside the saved scikit-learn `Pipeline` |
+| Preprocessing | Modular, version-controlled scripts | One script per step under `src/`, in Git |
+| Preprocessing | Same transform for training and inference | API loads the same `Pipeline` object |
+| Features | Reproducible and parameterized | Feature list in `topics/*.yaml`, built by `features.py` |
+| Features | Definitions in one version-controlled place | **Added:** each feature's NHANES variable name per cycle listed in `topics/*.yaml` |
+| Experiments | Hyperparameters, metrics, configs tracked | W&B logs every run |
+| Experiments | Seeds set for all random steps | One `seed` used for model fitting and bootstrap intervals; split is not random |
+| Experiments | Hardware and software environment logged | **Added:** Python and package versions, Docker image, git commit in `run_metadata.yaml` |
+| Experiments | Scripts parameterized | argparse flags `--topic` and `--final` |
+| Training | Modular, deterministic training | `train.py` reads only config and versioned data |
+| Training | Model versions and configs saved | `model.joblib`, `model_card.json`, W&B artifact |
+| Training | Metrics consistent across runs | Same `evaluate.py` and metric set for every topic |
+| Code | Version control | GitHub, protected `main`, pull requests |
+| Code | Dependencies listed | `requirements.txt` and `Dockerfile` |
+| Code | Isolated environment | Docker image |
+| Testing | Portable saved model | joblib with the scikit-learn version pinned and recorded |
+| Testing | Each step testable on its own | **Added:** one test per step on a small fixture file; GitHub Actions runs them |
+| Testing | Detailed, central logs | **Added:** Python logging to a run log file uploaded to W&B |
+| Testing | Metadata per run in a YAML file | **Added:** `runs/<run_id>/run_metadata.yaml` |
+| Class exercise | Results written in the README | Metrics table in README |
+| Class exercise | Another team can reproduce the results | **Added:** swap test: each partner reproduces the other's run from a fresh clone using only the README |
 
 ## Timeline
 
