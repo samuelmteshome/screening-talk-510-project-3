@@ -50,13 +50,14 @@ TOPICS: dict[str, Topic] = {
     "heart": Topic(
         id="heart",
         organ="Heart",
-        tool="Statin (cholesterol medicine)",
+        tool="Statin, blood pressure, aspirin",
         sexes=("male", "female"),
         age_min=40,
         age_max=75,
         has_model=True,
         evidence_files=("hope3_2016.json",),
-        aliases=("statin", "cholesterol", "rosuvastatin", "heart attack", "stroke", "cardiac", "cardiology"),
+        aliases=("statin", "cholesterol", "rosuvastatin", "heart attack", "stroke", "cardiac", "cardiology",
+                 "aspirin", "blood pressure", "hypertension", "checkup", "primary care"),
         excluded_history="prior_cvd",
         excluded_reason=("This tool predicts a first heart attack or stroke. The data left out anyone who already "
                          "had a heart attack, stroke, angina, or heart failure, so it can't give you a number. "

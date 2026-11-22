@@ -59,3 +59,30 @@ def test_prior_heart_attack_blocks_heart_number():
 def test_ineligible_organ_drawn_grey():
     html = body_map.render("male", topics_for("male"), {"sex": "male"}, frozenset({"heart"}))
     assert "organ heart off" in html and "not for you" in html
+
+
+def test_heart_action_math_and_wording():
+    import heart_actions as ha
+    line = ha.compare(0.10, 0.72, "event")
+    assert (line.denom, line.without, line.with_, line.fewer) == (100, 10, 7, 3)
+    assert "3 fewer" in ha.sentence(line)
+    small = ha.compare(0.03, 0.91, "cv_death", certain=False)
+    assert small.denom == 1000 and "no difference" in ha.sentence(small)
+    assert abs(ha.bp_rr(0.91, 150, 130) - 0.91 ** 4) < 1e-9
+    assert ha.bp_rr(0.91, 120, 130) == 1.0
+    assert ha.pct_change(0.92) == "8% fewer" and ha.pct_change(1.44) == "44% more"
+
+
+def test_every_action_has_effects_and_source():
+    import heart_actions as ha
+    effects = ha.load_effects()
+    assert set(effects) == set(ha.ACTIONS)
+    for a in effects.values():
+        assert a["source"] and a["url"].startswith("https://") and a["effects"]
+
+
+def test_search_routes_to_heart_action():
+    import heart_actions as ha
+    assert [t.id for t in search("aspirin", "female")] == ["heart"]
+    assert ha.action_for_query("Blood Pressure") == "bp"
+    assert ha.action_for_query("Statin") == "statin"
