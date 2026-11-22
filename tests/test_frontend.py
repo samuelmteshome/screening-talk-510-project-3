@@ -45,6 +45,7 @@ def test_body_map_links_each_organ():
     for t in topics_for("male"):
         assert f"organ={t.id}" in html
     assert "age=56" in html
+    assert html.count('class="organ-link') == 3
 
 
 def test_prior_heart_attack_blocks_heart_number():
@@ -58,7 +59,8 @@ def test_prior_heart_attack_blocks_heart_number():
 
 def test_ineligible_organ_drawn_grey():
     html = body_map.render("male", topics_for("male"), {"sex": "male"}, frozenset({"heart"}))
-    assert "organ heart off" in html and "not for you" in html
+    assert 'organ-link off" href="?sex=male&amp;organ=heart"' in html
+    assert "Not covered for you" in html
 
 
 def test_heart_action_math_and_wording():

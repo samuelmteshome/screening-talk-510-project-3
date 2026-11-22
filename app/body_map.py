@@ -1,105 +1,148 @@
-"""Animated body outline with clickable organs, drawn as inline SVG.
+"""Anatomical body map with clickable organs (inline SVG + CSS animation).
 
-Each organ is a link that adds ?organ=<topic> to the app's URL. The map is shown
-in a components.html iframe, so a small script replays each click as a link in
-the parent page.
+Artwork (see app/assets/LICENSES.md):
+- body: front-view male and female figures from react-native-body-highlighter (MIT)
+- organs: Health Icons (CC0)
+
+Each organ links to ?organ=<topic>. The map is shown in a components.html
+iframe, so a small script replays each click as a link in the parent page.
 """
 from __future__ import annotations
 
+import json
+import re
+from functools import lru_cache
+from html import escape
+from pathlib import Path
 from urllib.parse import urlencode
 
 from catalog import Topic
 
-# Organ outlines in a 300 x 600 drawing.
-ORGAN_SHAPES = {
-    "heart": '<path d="M162 175 c10-14 32-6 28 12 c-3 14-18 24-28 32 c-10-8-25-18-28-32 c-4-18 18-26 28-12z"/>',
-    "colorectal": (
-        '<path d="M112 270 h76 a14 14 0 0 1 14 14 v52 a14 14 0 0 1 -14 14 h-30 v14" '
-        'fill="none" stroke-width="10" stroke-linecap="round"/>'
-        '<path d="M112 270 a14 14 0 0 0 -14 14 v52 a14 14 0 0 0 14 14 h20" '
-        'fill="none" stroke-width="10" stroke-linecap="round"/>'
-    ),
-    "prostate": '<ellipse cx="150" cy="388" rx="13" ry="9"/>',
+ASSETS = Path(__file__).resolve().parent / "assets"
+
+# Organ glyph, colour, centre (x, y) and size in each figure's coordinates.
+ORGANS = {
+    "heart": {"icon": "heart-organ", "color": "#e11d48",
+              "male": (392, 398, 92), "female": (346, 402, 86)},
+    "colorectal": {"icon": "intestine", "color": "#d97706",
+                   "male": (364, 562, 168), "female": (320, 560, 160)},
+    "prostate": {"icon": "prostate", "color": "#7c3aed",
+                 "male": (364, 712, 58)},
 }
 
-LABEL_POS = {"heart": (222, 175), "colorectal": (232, 300), "prostate": (182, 395)}
-
-BODY = {
-    "male": (
-        '<circle cx="150" cy="60" r="34"/>'
-        '<path d="M150 96 v12 M108 120 q42-18 84 0 l22 10 q14 6 16 22 l10 150 q2 14-10 16 '
-        'l-8-150 -12 8 v150 q2 20-10 30 l-8 190 h-28 l-6-170 h-8 l-6 170 h-28 l-8-190 '
-        'q-12-10-10-30 v-150 l-12-8 -8 150 q-12-2-10-16 l10-150 q2-16 16-22z"/>'
-    ),
-    "female": (
-        '<circle cx="150" cy="60" r="32"/>'
-        '<path d="M150 94 v12 M114 118 q36-16 72 0 l20 10 q12 6 14 22 l10 150 q2 14-10 16 '
-        'l-8-150 -10 8 q-4 40 4 70 q14 40 6 80 l-10 180 h-28 l-6-170 h-8 l-6 170 h-28 l-10-180 '
-        'q-8-40 6-80 q8-30 4-70 l-10-8 -8 150 q-12-2-10-16 l10-150 q2-16 14-22z"/>'
-    ),
-}
+# Visible area per figure (room on the right for the callout labels).
+VIEW = {"male": (20, 110, 1060, 1260), "female": (-30, 70, 1060, 1400)}
+LABEL_X = {"male": 720, "female": 690}
 
 CSS = """
 <style>
-.st-body {display:flex; justify-content:center;}
-.st-body svg {max-width: 400px; width: 100%; height: auto;}
-.st-body .outline {fill: none; stroke: #6b7280; stroke-width: 3;
-  stroke-dasharray: 2400; stroke-dashoffset: 2400; animation: st-draw 1.6s ease-out forwards;}
-.st-body .organ {fill: #fca5a5; stroke: #b91c1c; stroke-width: 3; opacity: 0;
-  animation: st-fade .6s ease-out forwards, st-pulse 2.4s ease-in-out 2.2s infinite;
-  transform-box: fill-box; transform-origin: center; cursor: pointer;}
-.st-body .organ.colorectal path {stroke: #b45309;}
-.st-body .organ.colorectal {fill: none;}
-.st-body .organ.off {fill: #e5e7eb; stroke: #9ca3af; stroke-dasharray: 6 4;}
-.st-body .organ.colorectal.off path {stroke: #9ca3af;}
-.st-body a:hover .organ {fill: #ef4444; stroke-width: 5;}
-.st-body a:focus .organ {outline: none; stroke: #1d4ed8; stroke-width: 5;}
-.st-body text {font: 600 15px sans-serif; fill: #111827; opacity: 0;
-  animation: st-fade .6s ease-out 1.6s forwards;}
-.st-body text .note {font-weight: 400; font-size: 13px; fill: #6b7280;}
-@keyframes st-draw {to {stroke-dashoffset: 0;}}
-@keyframes st-fade {to {opacity: 1;}}
-@keyframes st-pulse {0%,100% {transform: scale(1);} 50% {transform: scale(1.08);}}
+:root { --ink:#0f172a; --muted:#64748b; }
+body { margin:0; font-family: "Source Sans Pro", -apple-system, "Segoe UI", sans-serif; }
+.map { display:flex; justify-content:center; }
+.map svg { width:100%; max-width:560px; height:auto; overflow:visible; }
+.figure { opacity:0; transform: translateY(24px); animation: rise .9s cubic-bezier(.2,.7,.2,1) forwards; }
+.silhouette { fill:#f4e7dd; stroke:#d8c3b4; stroke-width:3; }
+.muscle { fill:#ecd9cb; stroke:#fbf6f2; stroke-width:4; stroke-linejoin:round; }
+.muscle.hair { fill:#8a7464; stroke:none; }
+.organ-link { cursor:pointer; outline:none; }
+.organ { opacity:0; animation: pop .55s cubic-bezier(.3,1.6,.5,1) forwards; transform-box: fill-box; transform-origin:center; }
+.glyph { transition: transform .2s ease; transform-box: fill-box; transform-origin:center; filter: drop-shadow(0 6px 10px rgba(15,23,42,.18)); }
+.halo { transform-box: fill-box; transform-origin:center; animation: ring 2.6s ease-out infinite; }
+.organ-link:hover .glyph, .organ-link:focus .glyph { transform: scale(1.12); }
+.organ-link:hover .pill, .organ-link:focus .pill { stroke-width:4; }
+.leader { stroke:#94a3b8; stroke-width:2.5; stroke-dasharray:6 6; fill:none; }
+.pill { fill:#fff; stroke:#e2e8f0; stroke-width:2.5; filter: drop-shadow(0 4px 10px rgba(15,23,42,.08)); transition: stroke-width .15s; }
+.label { font-weight:700; font-size:34px; fill:var(--ink); }
+.sub { font-size:23px; fill:var(--muted); }
+.callout { opacity:0; animation: fade .5s ease-out forwards; }
+.off .glyph { fill:#cbd5e1 !important; filter:none; }
+.off .halo { display:none; }
+.off .label { fill:#94a3b8; }
+@keyframes rise { to { opacity:1; transform:none; } }
+@keyframes pop { from { opacity:0; transform:scale(.4); } to { opacity:1; transform:scale(1); } }
+@keyframes fade { to { opacity:1; } }
+@keyframes ring { 0% { transform:scale(.7); opacity:.35; } 80%,100% { transform:scale(1.45); opacity:0; } }
 @media (prefers-reduced-motion: reduce) {
-  .st-body .outline, .st-body .organ, .st-body text {animation: none; opacity: 1; stroke-dashoffset: 0;}
+  .figure, .organ, .callout { animation:none; opacity:1; transform:none; }
+  .halo { animation:none; opacity:.25; }
 }
 </style>
 """
+
+CLICK_SCRIPT = (
+    "<script>for (const a of document.querySelectorAll('a[data-q]')) {"
+    "a.addEventListener('click', (ev) => { try {"
+    "const d = window.parent.document, link = d.createElement('a');"
+    "link.href = window.parent.location.pathname + a.dataset.q; link.target = '_self';"
+    "d.body.appendChild(link); link.click(); ev.preventDefault(); } catch (e) {} }); }</script>"
+)
+
+
+@lru_cache(maxsize=None)
+def figure(sex: str) -> dict:
+    return json.loads((ASSETS / f"body_{sex}_front.json").read_text())
+
+
+@lru_cache(maxsize=None)
+def glyph_paths(icon: str) -> str:
+    """Inner <path> elements of a Health Icons SVG (24 x 24)."""
+    svg = (ASSETS / "organs" / f"{icon}.svg").read_text()
+    paths = re.findall(r"<path[^>]*/>", svg)
+    return "".join(p.replace('fill="currentColor"', "") for p in paths)
 
 
 def organ_link(params: dict, topic_id: str) -> str:
     return "?" + urlencode({**params, "organ": topic_id})
 
 
-def render(sex: str, topics: list[Topic], params: dict, ineligible: frozenset[str] = frozenset()) -> str:
-    """HTML for components.html(): body outline plus one link per organ.
+def _body(sex: str) -> str:
+    fig = figure(sex)
+    parts = [f'<path class="silhouette" d="{fig["outline"]}"/>']
+    for part in fig["parts"]:
+        cls = "muscle hair" if part["slug"] == "hair" else "muscle"
+        parts += [f'<path class="{cls}" d="{d}"/>' for d in part["paths"]]
+    return f'<g class="figure">{"".join(parts)}</g>'
 
-    Organs in `ineligible` are drawn grey and dashed; clicking still opens the
-    page that explains why there is no number.
-    """
-    parts = [CSS, '<div class="st-body"><svg viewBox="-30 0 400 600" role="img" '
-             f'aria-label="Body map, {sex}">']
-    parts.append(f'<g class="outline">{BODY[sex]}</g>')
-    for i, t in enumerate(topics):
-        delay = 1.2 + 0.25 * i
-        x, y = LABEL_POS[t.id]
-        parts.append(
-            f'<a href="{organ_link(params, t.id)}" data-q="{organ_link(params, t.id)}" target="_top" '
-            f'aria-label="{t.organ}: {t.tool}">'
-            f'<title>{t.organ}: {t.tool}</title>'
-            f'<g class="organ {t.id}{" off" if t.id in ineligible else ""}" style="animation-delay:{delay}s, {delay + 1}s">{ORGAN_SHAPES[t.id]}</g>'
-            f'<text x="{x}" y="{y}">{t.organ}'
-            + (f'<tspan x="{x}" dy="16" class="note">not for you</tspan>' if t.id in ineligible else "")
-            + '</text></a>'
-        )
-    parts.append("</svg></div>")
-    # Streamlit's iframe sandbox blocks direct top-level navigation, so the
-    # click is replayed as a link click inside the parent page (same origin).
-    parts.append(
-        "<script>for (const a of document.querySelectorAll('a[data-q]')) {"
-        "a.addEventListener('click', (ev) => { try {"
-        "const d = window.parent.document, link = d.createElement('a');"
-        "link.href = window.parent.location.pathname + a.dataset.q; link.target = '_self';"
-        "d.body.appendChild(link); link.click(); ev.preventDefault(); } catch (e) {} }); }</script>"
+
+def _organ(sex: str, t: Topic, i: int, off: bool, params: dict) -> str:
+    spec = ORGANS[t.id]
+    cx, cy, size = spec[sex]
+    color = spec["color"]
+    delay = 0.7 + 0.18 * i
+    scale = size / 24
+    lx = LABEL_X[sex]
+    note = "Not covered for you" if off else t.tool
+    q = escape(organ_link(params, t.id))
+    pill_w = max(len(t.organ) * 21, len(note) * 12.5) + 85
+    return (
+        f'<a class="organ-link{" off" if off else ""}" href="{q}" data-q="{q}" target="_top" '
+        f'aria-label="{escape(t.organ)}: {escape(note)}"><title>{escape(t.organ)}: {escape(note)}</title>'
+        f'<g class="organ" style="animation-delay:{delay:.2f}s">'
+        f'<circle class="halo" cx="{cx}" cy="{cy}" r="{size * 0.62:.0f}" fill="{color}" '
+        f'style="animation-delay:{delay + 0.6:.2f}s"/>'
+        f'<g class="glyph" fill="{color}"><g transform="translate({cx - size / 2:.1f} {cy - size / 2:.1f}) scale({scale:.3f})">'
+        f'{glyph_paths(spec["icon"])}</g></g></g>'
+        f'<g class="callout" style="animation-delay:{delay + 0.25:.2f}s">'
+        f'<path class="leader" d="M{cx + size * 0.55:.0f} {cy} H{lx}"/>'
+        f'<rect class="pill" x="{lx}" y="{cy - 46}" rx="22" width="{pill_w:.0f}" height="92"/>'
+        f'<circle cx="{lx + 30}" cy="{cy}" r="9" fill="{"#cbd5e1" if off else color}"/>'
+        f'<text class="label" x="{lx + 52}" y="{cy - 4}">{escape(t.organ)}</text>'
+        f'<text class="sub" x="{lx + 52}" y="{cy + 28}">{escape(note)}</text></g></a>'
     )
-    return "".join(parts)
+
+
+def render(sex: str, topics: list[Topic], params: dict, ineligible: frozenset[str] = frozenset()) -> str:
+    """HTML for components.html(): anatomical figure plus one link per organ.
+
+    Organs in `ineligible` are greyed out; clicking still opens the page that
+    explains why there is no number.
+    """
+    x, y, w, h = VIEW[sex]
+    organs = "".join(_organ(sex, t, i, t.id in ineligible, params) for i, t in enumerate(topics))
+    who = "man" if sex == "male" else "woman"
+    return (
+        CSS
+        + f'<div class="map"><svg viewBox="{x} {y} {w} {h}" role="img" '
+        f'aria-label="Front view of a {who}; click an organ to see results">'
+        + _body(sex) + organs + "</svg></div>" + CLICK_SCRIPT
+    )

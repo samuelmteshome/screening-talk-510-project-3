@@ -38,6 +38,10 @@ RACE_OPTIONS = {
 HEART_FIELDS = ("total_chol", "hdl", "sbp", "on_bp_meds", "diabetes", "current_smoker")
 
 st.set_page_config(page_title="Screening Talk", page_icon="🩺", layout="centered")
+st.markdown("""<style>
+h1 { font-size: 2.1rem !important; line-height: 1.2 !important; letter-spacing: -0.01em; }
+.eyebrow { color:#e11d48; font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:.8rem; margin-bottom:-.6rem; }
+</style>""", unsafe_allow_html=True)
 qp = st.query_params
 
 
@@ -95,12 +99,13 @@ def intake() -> None:
 
 # ---------- Step 2: body map ----------
 def body_page(sex: str, age: int) -> None:
+    st.markdown('<p class="eyebrow">Screening Talk</p>', unsafe_allow_html=True)
     st.title(TITLE)
     who = "man" if sex == "male" else "woman"
-    st.caption(f"{age}-year-old {who}. Click an outlined organ, or search below.")
+    st.caption(f"Showing results for a {age}-year-old {who}. Tap an organ, or search below.")
     topics = topics_for(sex)
     off = frozenset(t.id for t in topics if not eligibility(t, age, history())[0])
-    components.html(body_map.render(sex, topics, profile(), off), height=640)
+    components.html(body_map.render(sex, topics, profile(), off), height=760)
     if off:
         st.caption("Grey organs are outside the groups our data covers for you. Click one to see why.")
 
