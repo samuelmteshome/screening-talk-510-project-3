@@ -1,0 +1,17 @@
+{
+  "source": "Schroder et al., Screening for prostate cancer decreases the risk of developing metastatic disease (ERSPC), Eur Urol 2012;62(5):745-752",
+  "url": "https://doi.org/10.1016/j.eururo.2012.05.068",
+  "comparison": "Invitation to PSA screening vs no invitation, 4 ERSPC centers, men 55-69",
+  "horizon_years": 12,
+  "denominator": 1000,
+  "numbers": {
+    "men_screening_arm": {"value": 36270, "ref": "abstract"},
+    "men_control_arm": {"value": 40543, "ref": "abstract"},
+    "metastatic_cases_screening_arm": {"value": 256, "ref": "abstract"},
+    "metastatic_cases_control_arm": {"value": 410, "ref": "abstract"},
+    "metastatic_avoided_per_1000": {"value": 3.1, "ref": "abstract: absolute risk reduction 3.1 per 1000 randomized"},
+    "relative_reduction_pct": {"value": 30, "ref": "abstract: HR 0.70 (95% CI 0.60-0.82)"}
+  },
+  "verified_by": null,
+  "note": "Checked against the abstract on repub.eur.nl/pub/37453 (Nov 22). Confirm in the full paper."
+}

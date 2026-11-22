@@ -67,11 +67,22 @@ Shown next to the model's prediction. The two are never multiplied, because they
 
 We are not covering the digital rectal exam, ECG screening, or heart scans, because we did not find trials that fit this design.
 
+**Prostate: from test result to benefit (added Nov 22).** The model predicts a positive PSA test, measured at the same visit as the patient's age, race and BMI. It does not predict cancer, because NHANES does not follow men forward and the public death file groups all cancers together. The benefit of screening comes from trials that compare screened and unscreened men, so we show it from published results, next to the model output and never chained onto it.
+
+| Step | Number shown | Source |
+| --- | --- | --- |
+| Chance the PSA test comes back high | Model output (NHANES) | Our model |
+| Fewer metastatic prostate cancers | 3.1 fewer per 1,000 men invited (30% fewer, HR 0.70), 12 years | [Schröder et al., ERSPC, Eur Urol 2012](https://doi.org/10.1016/j.eururo.2012.05.068) |
+| Fewer prostate cancer deaths | About 2 fewer per 1,000 invited (13% fewer), 23 years | ERSPC, NEJM 2025 |
+| Life-years gained | 73 life-years per 1,000 men screened yearly from 55 to 69 (56 after adjusting for quality of life); about 8 years per death avoided, which averages to roughly a month per man | [Heijnsdijk et al., NEJM 2012](https://doi.org/10.1056/NEJMoa1201637) (model built on ERSPC) |
+
+Optional if time allows: personalize the death numbers by applying ERSPC's relative reduction to the prostate cancer death risk for the patient's age group from published tables.
+
 ## What the patient sees
 
 Example: a 56-year-old man chooses Prostate.
 
-> Among US men like you, about **\[X\] in 100** had a PSA of 4.0 or higher, the level that usually leads to more tests. In a large European trial, over 23 years, about **2 fewer men per 1,000** invited to screening died of prostate cancer. About 12 men were diagnosed for each death prevented, and some were treated for cancers that would not have harmed them. Use this to start a conversation with your doctor.
+> Among US men like you, about **\[X\] in 100** had a PSA of 4.0 or higher, the level that usually leads to a biopsy. In a large European trial, screening meant about **3 fewer men per 1,000** developed cancer that had spread, and about **2 fewer per 1,000** died of prostate cancer over 23 years. That adds up to about 73 years of life per 1,000 men screened, or about a month per man on average. About 12 men were diagnosed for each death prevented, and some were treated for cancers that would not have harmed them. Use this to start a conversation with your doctor.
 
 The page also shows bar charts of both results and the sources. Ages outside the model or trial range get no number, only a note.
 
@@ -158,6 +169,7 @@ If time runs short, the heart model is cut and heart becomes evidence only.
 - **Subgroups:** we report results by race/ethnicity. HOPE-3 had only 2% Black participants, and the app says so.
 - **False precision:** whole numbers only, with "about" and a range.
 - **Individual results:** trial results are averages for the people studied, not a promise for one patient. NHANES data ends in 2010 (PSA) and lacks family history.
+- **Prostate label:** the model predicts a positive PSA test on the same day, not cancer or death. Cancer and survival numbers come from published trials and models.
 
 ## To verify before submitting
 

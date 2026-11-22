@@ -45,3 +45,4 @@ serve:
   display_age_min: 55
   display_age_max: 69
   evidence_file: evidence/erspc_2025.json
+  extra_evidence_files: [evidence/erspc_metastatic_2012.json, evidence/heijnsdijk_lifeyears_2012.json]
