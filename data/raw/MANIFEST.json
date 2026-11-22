@@ -1,283 +1,283 @@
 {
   "heart/1999-2000/BMX.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/1999/DataFiles/BMX.xpt",
-    "downloaded_at": "2026-11-22T21:12:03+00:00",
+    "downloaded_at": "2026-11-22T21:16:32+00:00",
     "bytes": 2827840,
     "sha256": "6b9bc4d998c0004fc42b213cc7f5bf347df937707f46d6d25fab926723a60500"
   },
   "heart/1999-2000/BPQ.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/1999/DataFiles/BPQ.xpt",
-    "downloaded_at": "2026-11-22T21:12:05+00:00",
+    "downloaded_at": "2026-11-22T21:16:33+00:00",
     "bytes": 1746480,
     "sha256": "38d0e06bfbe8d01b2fe7af8d18622960fe7a21dd78312bbee7123df21af8c574"
   },
   "heart/1999-2000/BPX.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/1999/DataFiles/BPX.xpt",
-    "downloaded_at": "2026-11-22T21:12:04+00:00",
+    "downloaded_at": "2026-11-22T21:16:33+00:00",
     "bytes": 2232640,
     "sha256": "ab99dc870f4d5fbec80642ad4b72bde73cb50d0ae630f01c9e74de5a309759f4"
   },
   "heart/1999-2000/DEMO.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/1999/DataFiles/DEMO.xpt",
-    "downloaded_at": "2026-11-22T21:12:03+00:00",
+    "downloaded_at": "2026-11-22T21:16:32+00:00",
     "bytes": 11500560,
     "sha256": "a17bd1ebfd6007b8dc93f16259cb090678eb6c467a39363b7e932bba15febf89"
   },
   "heart/1999-2000/DIQ.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/1999/DataFiles/DIQ.xpt",
-    "downloaded_at": "2026-11-22T21:12:05+00:00",
+    "downloaded_at": "2026-11-22T21:16:33+00:00",
     "bytes": 1294240,
     "sha256": "85f1816a9d1809290012c2e58741f266ef811a63e51f75f7856538593c89cf7d"
   },
   "heart/1999-2000/LAB13.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/1999/DataFiles/LAB13.xpt",
-    "downloaded_at": "2026-11-22T21:12:04+00:00",
+    "downloaded_at": "2026-11-22T21:16:32+00:00",
     "bytes": 335200,
     "sha256": "45fb87d575f6a16d52dbfc59d70fe7ad95bded2e96262b4c768a7ccdf736b096"
   },
   "heart/1999-2000/MCQ.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/1999/DataFiles/MCQ.xpt",
-    "downloaded_at": "2026-11-22T21:12:06+00:00",
+    "downloaded_at": "2026-11-22T21:16:34+00:00",
     "bytes": 12706880,
     "sha256": "3bf45a296282a80baa23b4651c655cf422a235a08a142aa2ab5dd7ca963a2e5a"
   },
   "heart/1999-2000/NHANES_1999_2000_MORT_2019_PUBLIC.dat": {
     "url": "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/datalinkage/linked_mortality/NHANES_1999_2000_MORT_2019_PUBLIC.dat",
-    "downloaded_at": "2026-11-22T21:12:07+00:00",
+    "downloaded_at": "2026-11-22T21:16:35+00:00",
     "bytes": 487666,
     "sha256": "562bd367107add0b2b40fed36a062d8b194fca31e11aab897a0efad4bebc8b26"
   },
   "heart/1999-2000/SMQ.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/1999/DataFiles/SMQ.xpt",
-    "downloaded_at": "2026-11-22T21:12:05+00:00",
+    "downloaded_at": "2026-11-22T21:16:34+00:00",
     "bytes": 1733760,
     "sha256": "fb1505ea08e310a5cb703ccae0e220aede3da812674e9e53f832fe76e31c2ce3"
   },
   "heart/2001-2002/BMX_B.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2001/DataFiles/BMX_B.xpt",
-    "downloaded_at": "2026-11-22T21:12:08+00:00",
+    "downloaded_at": "2026-11-22T21:16:35+00:00",
     "bytes": 2183680,
     "sha256": "55715d4387960f88e48a2adf44da0b270a83290b1edf7c8e4ecc0eb2c29c59cf"
   },
   "heart/2001-2002/BPQ_B.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2001/DataFiles/BPQ_B.xpt",
-    "downloaded_at": "2026-11-22T21:12:08+00:00",
+    "downloaded_at": "2026-11-22T21:16:36+00:00",
     "bytes": 1916400,
     "sha256": "c11d1a051c6a9da5f57ed946ea1a3636640eddf7efcbcf73283081f76e3fea63"
   },
   "heart/2001-2002/BPX_B.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2001/DataFiles/BPX_B.xpt",
-    "downloaded_at": "2026-11-22T21:12:08+00:00",
+    "downloaded_at": "2026-11-22T21:16:36+00:00",
     "bytes": 2519440,
     "sha256": "d4214e708ccd12816a00e681f310e1e0eca14ac933c3b1cab21b1e000b871ad8"
   },
   "heart/2001-2002/DEMO_B.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2001/DataFiles/DEMO_B.xpt",
-    "downloaded_at": "2026-11-22T21:12:07+00:00",
+    "downloaded_at": "2026-11-22T21:16:35+00:00",
     "bytes": 3273520,
     "sha256": "6458dc2307cee244ab6ba26f70ec78c7b842ffc68e668bc43f0ab6b9737937d9"
   },
   "heart/2001-2002/DIQ_B.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2001/DataFiles/DIQ_B.xpt",
-    "downloaded_at": "2026-11-22T21:12:08+00:00",
+    "downloaded_at": "2026-11-22T21:16:37+00:00",
     "bytes": 1427040,
     "sha256": "795aece6fa9a755744a4c1171cfce827fc3798ac4a4a04c894facac8176efb61"
   },
   "heart/2001-2002/L13_B.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2001/DataFiles/L13_B.xpt",
-    "downloaded_at": "2026-11-22T21:12:08+00:00",
+    "downloaded_at": "2026-11-22T21:16:36+00:00",
     "bytes": 371920,
     "sha256": "28b32f39fdfc2a2b6d48fbaf62415ff70ef55ee3c28ec930679b0040e2f6481b"
   },
   "heart/2001-2002/MCQ_B.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2001/DataFiles/MCQ_B.xpt",
-    "downloaded_at": "2026-11-22T21:12:10+00:00",
+    "downloaded_at": "2026-11-22T21:16:38+00:00",
     "bytes": 12417920,
     "sha256": "6e31c8d78e1ab0d1aaa8f012411641d6b51bc9601c2237d999d0acdddd04de01"
   },
   "heart/2001-2002/NHANES_2001_2002_MORT_2019_PUBLIC.dat": {
     "url": "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/datalinkage/linked_mortality/NHANES_2001_2002_MORT_2019_PUBLIC.dat",
-    "downloaded_at": "2026-11-22T21:12:11+00:00",
+    "downloaded_at": "2026-11-22T21:16:38+00:00",
     "bytes": 540362,
     "sha256": "2788c8c8a02995ea5686882b5fe65b4b9cd415016031525f8a3c1a3646c47f1b"
   },
   "heart/2001-2002/SMQ_B.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2001/DataFiles/SMQ_B.xpt",
-    "downloaded_at": "2026-11-22T21:12:09+00:00",
+    "downloaded_at": "2026-11-22T21:16:37+00:00",
     "bytes": 2073680,
     "sha256": "179d7ad46de9478824d475de0e6425f474b34dd4798066a552acd31b89f07fde"
   },
   "heart/2003-2004/BMX_C.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2003/DataFiles/BMX_C.xpt",
-    "downloaded_at": "2026-11-22T21:12:11+00:00",
+    "downloaded_at": "2026-11-22T21:16:39+00:00",
     "bytes": 2551120,
     "sha256": "b3d3e431b5964ea8b5807035044322fcf32f3878d814d4a844204e51c793f090"
   },
   "heart/2003-2004/BPQ_C.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2003/DataFiles/BPQ_C.xpt",
-    "downloaded_at": "2026-11-22T21:12:12+00:00",
+    "downloaded_at": "2026-11-22T21:16:40+00:00",
     "bytes": 1795120,
     "sha256": "b31db89674d59073106581ed41c265c387a70000dce0cb984a865e82cd9b63a0"
   },
   "heart/2003-2004/BPX_C.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2003/DataFiles/BPX_C.xpt",
-    "downloaded_at": "2026-11-22T21:12:12+00:00",
+    "downloaded_at": "2026-11-22T21:16:39+00:00",
     "bytes": 2319280,
     "sha256": "4df5a7dbd9e3b882b34ad516e80d09abbd0688a46d011711e7f9cdecf53ece36"
   },
   "heart/2003-2004/DEMO_C.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2003/DataFiles/DEMO_C.xpt",
-    "downloaded_at": "2026-11-22T21:12:11+00:00",
+    "downloaded_at": "2026-11-22T21:16:38+00:00",
     "bytes": 3569840,
     "sha256": "2a2fdb88263337bfa06f0516bfb419631595f0a0ee88fb96069bed13d1857c6f"
   },
   "heart/2003-2004/DIQ_C.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2003/DataFiles/DIQ_C.xpt",
-    "downloaded_at": "2026-11-22T21:12:12+00:00",
+    "downloaded_at": "2026-11-22T21:16:40+00:00",
     "bytes": 1314880,
     "sha256": "e64a1db590d733c812359abb0da6fdc3f20860ec3f89aec24442df994e90befe"
   },
   "heart/2003-2004/L13_C.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2003/DataFiles/L13_C.xpt",
-    "downloaded_at": "2026-11-22T21:12:11+00:00",
+    "downloaded_at": "2026-11-22T21:16:39+00:00",
     "bytes": 343680,
     "sha256": "d62321a2f8b5b949a4898e89d4010c67c0425ecd5fb2632c0d56999ae8bbdb69"
   },
   "heart/2003-2004/MCQ_C.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2003/DataFiles/MCQ_C.xpt",
-    "downloaded_at": "2026-11-22T21:12:13+00:00",
+    "downloaded_at": "2026-11-22T21:16:41+00:00",
     "bytes": 11904960,
     "sha256": "42487737067c5dbdf533bb91b5f752d1fff1dfa9eed91c7ae54ab5e49b65b019"
   },
   "heart/2003-2004/NHANES_2003_2004_MORT_2019_PUBLIC.dat": {
     "url": "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/datalinkage/linked_mortality/NHANES_2003_2004_MORT_2019_PUBLIC.dat",
-    "downloaded_at": "2026-11-22T21:12:14+00:00",
+    "downloaded_at": "2026-11-22T21:16:41+00:00",
     "bytes": 495722,
     "sha256": "639f6b3292a55b112fbfc842954af3d8d32bcce287cd8ae49319e5aca1c033c0"
   },
   "heart/2003-2004/SMQ_C.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2003/DataFiles/SMQ_C.xpt",
-    "downloaded_at": "2026-11-22T21:12:12+00:00",
+    "downloaded_at": "2026-11-22T21:16:40+00:00",
     "bytes": 1932320,
     "sha256": "fbfe1e4b286ab43fdc3fd84c3830bb241b8b5ca84b3ab5902b8808e4136efc2c"
   },
   "heart/2005-2006/BMX_D.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2005/DataFiles/BMX_D.xpt",
-    "downloaded_at": "2026-11-22T21:12:15+00:00",
+    "downloaded_at": "2026-11-22T21:16:42+00:00",
     "bytes": 2153760,
     "sha256": "a52909be94cf825ba8a65477a9528603576fd5fbf3abadd72549a3f15c88566e"
   },
   "heart/2005-2006/BPQ_D.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2005/DataFiles/BPQ_D.xpt",
-    "downloaded_at": "2026-11-22T21:12:15+00:00",
+    "downloaded_at": "2026-11-22T21:16:43+00:00",
     "bytes": 788800,
     "sha256": "089b29fdfbc3d46a93c63e74cfc29376b3168556813d206119d471ee48991bac"
   },
   "heart/2005-2006/BPX_D.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2005/DataFiles/BPX_D.xpt",
-    "downloaded_at": "2026-11-22T21:12:15+00:00",
+    "downloaded_at": "2026-11-22T21:16:43+00:00",
     "bytes": 2233440,
     "sha256": "aed2f33909986e1ff0e3d58ad35795741ee90b1d146420ccbc4c5fff9436c0e9"
   },
   "heart/2005-2006/DEMO_D.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2005/DataFiles/DEMO_D.xpt",
-    "downloaded_at": "2026-11-22T21:12:14+00:00",
+    "downloaded_at": "2026-11-22T21:16:42+00:00",
     "bytes": 3566560,
     "sha256": "bf9cc79cce501b2fbe5aa8d5b403b618548d02d4aefeb528335cdd9f4c40a3af"
   },
   "heart/2005-2006/DIQ_D.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2005/DataFiles/DIQ_D.xpt",
-    "downloaded_at": "2026-11-22T21:12:16+00:00",
+    "downloaded_at": "2026-11-22T21:16:43+00:00",
     "bytes": 2834560,
     "sha256": "ac81ed56d09aadbe12df39c6991d9f4d9cfa04211aee4d103d38c981390b826e"
   },
   "heart/2005-2006/HDL_D.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2005/DataFiles/HDL_D.xpt",
-    "downloaded_at": "2026-11-22T21:12:15+00:00",
+    "downloaded_at": "2026-11-22T21:16:42+00:00",
     "bytes": 195280,
     "sha256": "1c6d56cbf21819c95a49e5045de1fce408af156bb88a0c7b3e33d37e9afd204b"
   },
   "heart/2005-2006/MCQ_D.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2005/DataFiles/MCQ_D.xpt",
-    "downloaded_at": "2026-11-22T21:12:17+00:00",
+    "downloaded_at": "2026-11-22T21:16:44+00:00",
     "bytes": 7006480,
     "sha256": "12bf5f557c97284e096a8cd8aefbc8e3ab9f12a410c2f50474c4dfddd2ebf6f4"
   },
   "heart/2005-2006/NHANES_2005_2006_MORT_2019_PUBLIC.dat": {
     "url": "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/datalinkage/linked_mortality/NHANES_2005_2006_MORT_2019_PUBLIC.dat",
-    "downloaded_at": "2026-11-22T21:12:17+00:00",
+    "downloaded_at": "2026-11-22T21:16:44+00:00",
     "bytes": 506774,
     "sha256": "69388ea13a4f395f29d9d21bc51941b9759003490d4b00f6ff12a1bc5f8dba5c"
   },
   "heart/2005-2006/SMQ_D.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2005/DataFiles/SMQ_D.xpt",
-    "downloaded_at": "2026-11-22T21:12:16+00:00",
+    "downloaded_at": "2026-11-22T21:16:44+00:00",
     "bytes": 2578880,
     "sha256": "ef82433aca1a36ba2310a624ccdbaf195e2a258a88af0f284ef2a58d36be3011"
   },
   "heart/2005-2006/TCHOL_D.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2005/DataFiles/TCHOL_D.xpt",
-    "downloaded_at": "2026-11-22T21:12:15+00:00",
+    "downloaded_at": "2026-11-22T21:16:42+00:00",
     "bytes": 195280,
     "sha256": "e3807e23aee2a6617b2a051d3d370a2be52be7325f6271432d514aca7f13dd4f"
   },
   "heart/2007-2008/BMX_E.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2007/DataFiles/BMX_E.xpt",
-    "downloaded_at": "2026-11-22T21:12:18+00:00",
+    "downloaded_at": "2026-11-22T21:16:45+00:00",
     "bytes": 1800240,
     "sha256": "b67b50dbd12c9510b49b6348b595b9fd073c422c0c6eac182f90ac57b491a97d"
   },
   "heart/2007-2008/BPQ_E.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2007/DataFiles/BPQ_E.xpt",
-    "downloaded_at": "2026-11-22T21:12:19+00:00",
+    "downloaded_at": "2026-11-22T21:16:46+00:00",
     "bytes": 998480,
     "sha256": "b802b5855d48fc230c734083ea1e4d4a9d84e1b36bf5e78fcd725c17d6ce77df"
   },
   "heart/2007-2008/BPX_E.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2007/DataFiles/BPX_E.xpt",
-    "downloaded_at": "2026-11-22T21:12:19+00:00",
+    "downloaded_at": "2026-11-22T21:16:46+00:00",
     "bytes": 2113200,
     "sha256": "5a0303e68e0a4d7ebdbd2bc82f87852c31e44f1733782e107219bed9303baed5"
   },
   "heart/2007-2008/DEMO_E.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2007/DataFiles/DEMO_E.xpt",
-    "downloaded_at": "2026-11-22T21:12:18+00:00",
+    "downloaded_at": "2026-11-22T21:16:45+00:00",
     "bytes": 3498080,
     "sha256": "02b8e97703d04bc99769c751881bece51ac9ba68cf18a2992a45d3bdfb856147"
   },
   "heart/2007-2008/DIQ_E.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2007/DataFiles/DIQ_E.xpt",
-    "downloaded_at": "2026-11-22T21:12:20+00:00",
+    "downloaded_at": "2026-11-22T21:16:46+00:00",
     "bytes": 2789600,
     "sha256": "fb4d698fbec26bc8a09b2cd0f3019f815114742dd2c37ccac1aaf5e0123394c5"
   },
   "heart/2007-2008/HDL_E.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2007/DataFiles/HDL_E.xpt",
-    "downloaded_at": "2026-11-22T21:12:19+00:00",
+    "downloaded_at": "2026-11-22T21:16:45+00:00",
     "bytes": 196400,
     "sha256": "3c7021fb4411990551c3ea3f86c5b870c325a23b2b1656054d1ec10883bee19c"
   },
   "heart/2007-2008/MCQ_E.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2007/DataFiles/MCQ_E.xpt",
-    "downloaded_at": "2026-11-22T21:12:21+00:00",
+    "downloaded_at": "2026-11-22T21:16:47+00:00",
     "bytes": 7127840,
     "sha256": "dfbe11c6b036ec4e79aeba7805833fc4951c74662a9510066c3a93932f6990e6"
   },
   "heart/2007-2008/NHANES_2007_2008_MORT_2019_PUBLIC.dat": {
     "url": "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/datalinkage/linked_mortality/NHANES_2007_2008_MORT_2019_PUBLIC.dat",
-    "downloaded_at": "2026-11-22T21:12:21+00:00",
+    "downloaded_at": "2026-11-22T21:16:48+00:00",
     "bytes": 498376,
     "sha256": "75f89bd545a13ba726a7eb56de4d62f6dfc8f0f76d505dc18ced9752d5e2c77d"
   },
   "heart/2007-2008/SMQ_E.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2007/DataFiles/SMQ_E.xpt",
-    "downloaded_at": "2026-11-22T21:12:20+00:00",
+    "downloaded_at": "2026-11-22T21:16:47+00:00",
     "bytes": 2449520,
     "sha256": "881865ee05f4b2be0c03c761f00ad8e355f2cc5e7d3be41666edef6f3dca5862"
   },
   "heart/2007-2008/TCHOL_E.xpt": {
     "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2007/DataFiles/TCHOL_E.xpt",
-    "downloaded_at": "2026-11-22T21:12:18+00:00",
+    "downloaded_at": "2026-11-22T21:16:45+00:00",
     "bytes": 196400,
     "sha256": "1e137eb4fcccd0c0e104b4b1849f00b09e8a9077e2143e844a09bb673507fff1"
   }

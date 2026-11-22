@@ -7,16 +7,32 @@
       "n": 2165,
       "predicted_per_1000": 24.4,
       "observed_per_1000": 21.2
+    },
+    "test": {
+      "auc": 0.702,
+      "brier": 0.0233,
+      "events": 70,
+      "n": 2877,
+      "predicted_per_1000": 25.1,
+      "observed_per_1000": 24.3
     }
   },
   "model": {
     "val": {
-      "auc": 0.779,
-      "brier": 0.0203,
+      "auc": 0.775,
+      "brier": 0.0204,
       "events": 46,
       "n": 2165,
-      "predicted_per_1000": 23.2,
+      "predicted_per_1000": 23.0,
       "observed_per_1000": 21.2
+    },
+    "test": {
+      "auc": 0.782,
+      "brier": 0.0234,
+      "events": 70,
+      "n": 2877,
+      "predicted_per_1000": 24.1,
+      "observed_per_1000": 24.3
     }
   }
 }
