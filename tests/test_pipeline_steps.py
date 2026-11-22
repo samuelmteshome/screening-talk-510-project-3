@@ -2,11 +2,6 @@
 import pytest
 
 
-@pytest.mark.skip(reason="TODO Alberto: clean.py on fixture passes schema.yaml check")
-def test_clean_schema():
-    pass
-
-
 @pytest.mark.skip(reason="TODO Alberto: features.py builds the columns listed in topics/*.yaml")
 def test_features():
     pass
