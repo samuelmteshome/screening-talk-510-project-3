@@ -1,6 +1,12 @@
 seed: 510
 storage:
-  bucket: <bucket>
+  bucket: <bucket>            # or set GCS_BUCKET in .env
+data:
+  nhanes_base_url: https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/{start_year}/DataFiles/{file}.xpt
+  raw_dir: data/raw           # local downloads (git-ignored except MANIFEST.json)
+  clean_dir: data/clean       # local cleaned parquet before upload
+  cache_dir: data/cache       # local copy of the cloud data used for training
+  raw_snapshot_uri: gs://<bucket>/raw/{date}/{topic}/{cycle}/{file}.xpt
 tracking:
   project: screening-talk
   entity: <team>
