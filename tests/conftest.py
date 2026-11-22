@@ -30,3 +30,21 @@ def prostate_cfg(tmp_path):
     cfg["data"]["files"] = dict(FIXTURE_CYCLES)
     cfg["data"]["clean_uri"] = str(tmp_path / "bucket" / "clean" / "prostate" / "v1" / "clean.parquet")
     return cfg
+
+
+HEART_FIXTURE_FILES = {
+    "2001-2002": ["DEMO_B", "BMX_B", "L13_B", "BPX_B", "BPQ_B", "DIQ_B", "SMQ_B", "MCQ_B",
+                  "https://ftp.cdc.gov/x/NHANES_2001_2002_MORT_2019_PUBLIC.dat"],
+    "2005-2006": ["DEMO_D", "BMX_D", "TCHOL_D", "HDL_D", "BPX_D", "BPQ_D", "DIQ_D", "SMQ_D", "MCQ_D",
+                  "https://ftp.cdc.gov/x/NHANES_2005_2006_MORT_2019_PUBLIC.dat"],
+}
+
+
+@pytest.fixture
+def heart_cfg(tmp_path):
+    """The real heart config, limited to the two fixture cycles."""
+    cfg = copy.deepcopy(load_topic("heart"))
+    cfg["data"]["cycles"] = list(HEART_FIXTURE_FILES)
+    cfg["data"]["files"] = dict(HEART_FIXTURE_FILES)
+    cfg["data"]["clean_uri"] = str(tmp_path / "bucket" / "clean" / "heart" / "v1" / "clean.parquet")
+    return cfg
