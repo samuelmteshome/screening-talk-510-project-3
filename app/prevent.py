@@ -3,8 +3,9 @@
 Khan SS et al. Development and Validation of the American Heart Association's
 PREVENT Equations. Circulation 2024;149:430-449. Base model, ages 30-79, people
 without known heart disease. Coefficients transcribed from the published
-formula (MDCalc review of PREVENT, 2026); check against the paper's supplement
-before relying on them.
+formula (MDCalc review of PREVENT, 2026). Checked Nov 22: all 80 coefficients
+match that table, and risk() reproduces the preventr R package's README example
+(10-year total CVD 0.147, ASCVD 0.092); see tests/test_evidence.py.
 
 Used for (1) the heart attack / stroke chance on the heart pages, since NHANES
 only records deaths, and (2) people aged 30-39 or 76-79, outside our model's
