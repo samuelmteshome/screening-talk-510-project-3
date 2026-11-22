@@ -82,7 +82,7 @@ Optional if time allows: personalize the death numbers by applying ERSPC's relat
 
 Example: a 56-year-old man chooses Prostate.
 
-> Among US men like you, about **\[X\] in 100** had a PSA of 4.0 or higher, the level that usually leads to a biopsy. In a large European trial, screening meant about **3 fewer men per 1,000** developed cancer that had spread, and about **2 fewer per 1,000** died of prostate cancer over 23 years. That adds up to about 73 years of life per 1,000 men screened, or about a month per man on average. About 12 men were diagnosed for each death prevented, and some were treated for cancers that would not have harmed them. Use this to start a conversation with your doctor.
+> Among US men like you, about **\[X\] in 100** had a PSA of 4.0 or higher, the level that usually leads to a biopsy. In a large European trial, screening meant about **3 fewer men per 1,000** developed cancer that had spread, and about **2 fewer per 1,000** died of prostate cancer over 23 years. A model built on this trial estimated that screening every year from 55 to 69 would add about 73 years of life per 1,000 men over their lifetime, or about a month per man on average. About 12 men were diagnosed for each death prevented, and some were treated for cancers that would not have harmed them. Use this to start a conversation with your doctor.
 
 The page also shows bar charts of both results and the sources. Ages outside the model or trial range get no number, only a note.
 
@@ -173,8 +173,7 @@ If time runs short, the heart model is cut and heart becomes evidence only.
 
 ## To verify before submitting
 
-- ERSPC deaths per 1,000 in each group and the age range, from the NEJM paper (current figures come from a university press release).
-- HOPE-3 muscle-symptom rates, from the NEJM paper.
+- ERSPC 2025 deaths in each group, from the full NEJM paper (the abstract gives the 0.22% absolute and 13% relative reduction, now in the evidence file).
 - NHANES cause-of-death codes and variable names in each cycle's codebook.
 
 ## Sources
