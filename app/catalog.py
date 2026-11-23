@@ -71,7 +71,7 @@ TOPICS: dict[str, Topic] = {
     "colorectal": Topic(
         id="colorectal",
         organ="Colon",
-        tool="Colonoscopy",
+        tool="Colonoscopy, stool test",
         sexes=("male", "female"),
         age_min=45,               # USPSTF screening ages; personal risk from SEER rates (app/colon_risk.py)
         age_max=75,

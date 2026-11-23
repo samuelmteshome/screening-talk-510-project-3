@@ -1,0 +1,94 @@
+{
+  "note": "Heart lifestyle options. Exercise and quitting smoking numbers come from large cohort studies (people followed over time, not randomized), so they show links, not proof. Weight loss is from a randomized trial plus a meta-analysis of trials.",
+  "actions": {
+    "quit_smoking": {
+      "source": "Jha et al., 21st-Century Hazards of Smoking and Benefits of Cessation in the United States, NEJM 2013;368:341-350 (US National Health Interview Survey, about 200,000 adults)",
+      "url": "https://www.tobaccofreekids.org/press-releases/2013_01_23_nejm",
+      "life_years_by_quit_age": {
+        "25-34": 10,
+        "35-44": 9,
+        "45-54": 6,
+        "55-64": 4
+      },
+      "smoker_life_years_lost": 10,
+      "how": "Heart attack and stroke risk with and without smoking: the PREVENT equations, run on your answers. Death from heart disease or stroke: our NHANES model, run with and without smoking.",
+      "verified_by": "claude",
+      "verified_on": "2026-11-23",
+      "verified_against": "Campaign for Tobacco-Free Kids summary and LA Times report of the paper"
+    },
+    "exercise": {
+      "recommendation": "150 to 300 minutes a week of vigorous exercise (running, fast cycling, swimming laps), or 300 to 600 minutes of moderate exercise (brisk walking, easy cycling), plus muscle strengthening (weights, bands, push-ups) for 30 to 60 minutes a week over 2 or more days.",
+      "source": "Lee DH et al., Long-Term Leisure-Time Physical Activity Intensity and All-Cause and Cause-Specific Mortality, Circulation 2022;146:523-534 (116,221 adults, 30 years)",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9378548",
+      "effects": {
+        "cv_death": {
+          "rr": 0.69,
+          "ci": [
+            0.6,
+            0.78
+          ],
+          "label": "death from heart disease or stroke, vigorous exercise 75-149 min/week (the guideline amount) vs none"
+        },
+        "any_death": {
+          "rr": 0.81,
+          "ci": [
+            0.76,
+            0.87
+          ],
+          "label": "death from any cause, same comparison"
+        }
+      },
+      "life_years": {
+        "value": 4.5,
+        "ci": [
+          4.3,
+          4.7
+        ],
+        "label": "at 450+ minutes a week of brisk walking or the same amount of exercise, vs none, after age 40",
+        "source": "Moore et al., PLoS Medicine 2012;9:e1001335 (654,827 adults)",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/23139642/",
+        "low_dose": {
+          "value": 1.8,
+          "label": "at up to 75 minutes a week of brisk walking"
+        }
+      },
+      "strength": {
+        "source": "Momma et al., British Journal of Sports Medicine 2022;56:755-763 (16 studies)",
+        "url": "https://www.bmj.com/company/newsroom/30-60-mins-of-weekly-muscle-strengthening-activity-linked-to-10-20-lower-death-risk/",
+        "strength_alone": "10 to 20% lower risk of death and of heart disease at 30 to 60 minutes a week",
+        "combined_cvd_pct": 46,
+        "combined_death_pct": 40
+      },
+      "verified_by": "claude",
+      "verified_on": "2026-11-23",
+      "verified_against": "Lee 2022 abstract and table 2; Moore 2012 abstract; Momma 2022 BMJ press release"
+    },
+    "weight_loss": {
+      "source": "Neter et al., Influence of Weight Reduction on Blood Pressure, Hypertension 2003;42:878-884 (25 randomized trials, 4,874 people)",
+      "url": "https://researchinformation.umcutrecht.nl/en/publications/influence-of-weight-reduction-on-blood-pressure-a-meta-analysis-o/",
+      "sbp_per_kg": {
+        "value": -1.05,
+        "ci": [
+          -1.43,
+          -0.66
+        ]
+      },
+      "example_kg": 4.5,
+      "trial": {
+        "source": "Look AHEAD Research Group, Cardiovascular Effects of Intensive Lifestyle Intervention in Type 2 Diabetes, NEJM 2013;369:145-154 (5,145 adults with type 2 diabetes and overweight, median 9.6 years)",
+        "url": "https://www.acc.org/latest-in-cardiology/clinical-trials/2013/10/01/15/55/look-ahead",
+        "events_per_100_person_years": {
+          "intervention": 1.8,
+          "control": 1.9
+        },
+        "weight_loss_pct_1y": {
+          "intervention": 8.6,
+          "control": 0.7
+        }
+      },
+      "verified_by": "claude",
+      "verified_on": "2026-11-23",
+      "verified_against": "Neter 2003 abstract; ACC trial summary of Look AHEAD"
+    }
+  }
+}

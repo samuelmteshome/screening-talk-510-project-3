@@ -1,4 +1,5 @@
 """Front-end logic: which organs show, search, evidence loading, body map links."""
+import json
 import sys
 from pathlib import Path
 
@@ -97,11 +98,13 @@ def test_flowchart_lists_only_options_with_data():
     import heart_actions as ha
     tree = flowchart.options_for("heart")
     assert [o.id for o in tree["medications"]] == ["statin", "bp", "aspirin"]
+    assert [o.id for o in tree["lifestyle"]] == ["quit_smoking", "exercise", "weight_loss"]
     assert [o.id for o in tree["screening"]] == ["checkups"]
     assert "medications" not in flowchart.options_for("colorectal")
+    lifestyle = json.loads((Path(__file__).resolve().parents[1] / "evidence" / "lifestyle.json").read_text())["actions"]
     for o in flowchart.OPTIONS:
         if o.topic == "heart":
-            assert o.id in ha.ACTIONS
+            assert o.id in ha.ACTIONS or o.id in lifestyle
 
 
 def test_flowchart_expands_branch_and_links_options():
