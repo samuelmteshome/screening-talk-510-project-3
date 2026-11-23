@@ -112,10 +112,13 @@ def validate(df: pd.DataFrame, rules: dict[str, dict[str, Any]], label: str) -> 
             bad = sorted(set(present.unique()) - set(rule["allowed"]))
             if bad:
                 problems.append(f"{col}: unexpected values {bad[:5]}")
-        if "min" in rule and (present < rule["min"]).any():
-            problems.append(f"{col}: values below {rule['min']}")
-        if "max" in rule and (present > rule["max"]).any():
-            problems.append(f"{col}: values above {rule['max']}")
+        for key, low in (("min", True), ("max", False)):
+            if key in rule:
+                off = present[present < rule[key]] if low else present[present > rule[key]]
+                if len(off):
+                    where = f" (cycles {sorted(df.loc[off.index, 'cycle'].unique())})" if "cycle" in df else ""
+                    problems.append(f"{col}: {len(off)} values {'below' if low else 'above'} {rule[key]}, "
+                                    f"e.g. {sorted(off.unique())[:5]}{where}")
     if problems:
         raise SchemaError(f"{label} failed schema.yaml checks:\n  " + "\n  ".join(problems))
 
