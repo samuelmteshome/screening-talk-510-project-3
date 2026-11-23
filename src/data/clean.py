@@ -203,9 +203,41 @@ def build_heart(df: pd.DataFrame, cfg: dict[str, Any]) -> tuple[pd.DataFrame, li
     return out, counts
 
 
+def build_colorectal(df: pd.DataFrame, cfg: dict[str, Any]) -> tuple[pd.DataFrame, list[tuple[str, int]]]:
+    """Adults in the screening ages who answered the cancer question; target = ever told
+    they had colon or rectal cancer (MCQ230A-C)."""
+    data = cfg["data"]
+    counts = [("All participants in the merged files", len(df))]
+    df = df[df["age"].between(data["age_min"], data["age_max"])]
+    counts.append((f"Aged {data['age_min']} to {data['age_max']}", len(df)))
+    df = df[df["ever_cancer"].isin([1, 2])]
+    counts.append(("Answered 'ever told you had cancer' yes or no", len(df)))
+    codes = list(data["cancer_type_codes"].values())
+    crc = df[["cancer_1", "cancer_2", "cancer_3"]].isin(codes).any(axis=1)
+    out = pd.DataFrame(
+        {
+            "SEQN": df["SEQN"].astype("int64"),
+            "cycle": df["cycle"],
+            "target": crc.astype("int64"),
+            "exam_weight": df["exam_weight"].fillna(0).astype("float64"),
+            "age": df["age"].astype("float64"),
+            "sex": df["sex"].map({1: "male", 2: "female"}),
+            "race_eth": df["race_eth"].astype(int).map(RACE_ETH),
+            "bmi": df["bmi"],
+            "ever_smoked": _yes(df["smoked_100"]),
+            "current_smoker": df["smoke_now"].isin([1, 2]).astype("int64"),
+            "diabetes": _yes(df["diabetes_told"]),
+            "other_cancer": ((df["ever_cancer"] == YES) & ~crc).astype("int64"),
+        }
+    )
+    counts.append(("Target: ever told they had colon or rectal cancer", int(out["target"].sum())))
+    return out, counts
+
+
 BUILDERS: dict[str, Callable[[pd.DataFrame, dict[str, Any]], tuple[pd.DataFrame, list]]] = {
     "prostate": build_prostate,
     "heart": build_heart,
+    "colorectal": build_colorectal,
 }
 
 

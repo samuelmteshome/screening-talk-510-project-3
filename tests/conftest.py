@@ -48,3 +48,19 @@ def heart_cfg(tmp_path):
     cfg["data"]["files"] = dict(HEART_FIXTURE_FILES)
     cfg["data"]["clean_uri"] = str(tmp_path / "bucket" / "clean" / "heart" / "v1" / "clean.parquet")
     return cfg
+
+
+COLORECTAL_FIXTURE_FILES = {
+    "2003-2004": ["DEMO_C", "BMX_C", "SMQ_C", "DIQ_C", "MCQ_C"],
+    "2013-2014": ["DEMO_H", "BMX_H", "SMQ_H", "DIQ_H", "MCQ_H"],
+}
+
+
+@pytest.fixture
+def colorectal_cfg(tmp_path):
+    """The real colorectal config, limited to the two fixture cycles."""
+    cfg = copy.deepcopy(load_topic("colorectal"))
+    cfg["data"]["cycles"] = list(COLORECTAL_FIXTURE_FILES)
+    cfg["data"]["files"] = dict(COLORECTAL_FIXTURE_FILES)
+    cfg["data"]["clean_uri"] = str(tmp_path / "bucket" / "clean" / "colorectal" / "v1" / "clean.parquet")
+    return cfg

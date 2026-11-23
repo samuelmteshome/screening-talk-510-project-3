@@ -33,6 +33,15 @@ LABELS = {
     "diabetes": "Diabetes", "current_smoker": "Current smoker",
 }
 BAR = "#2563eb"
+LABELS.update({"ever_smoked": "Ever smoked (100+ cigarettes)", "other_cancer": "Had another cancer"})
+
+# What the target means, per topic (chart axis and report wording).
+OUTCOME = {
+    "heart": ("Died of heart disease or stroke within 10 years",
+              "Deaths from heart disease or stroke per 1,000 (10 years)"),
+    "colorectal": ("Ever told they had colon or rectal cancer",
+                   "People who have had colon or rectal cancer, per 1,000"),
+}
 
 
 def _bins(series: pd.Series) -> pd.Series:
@@ -54,12 +63,12 @@ def rate_by(df: pd.DataFrame, col: str) -> pd.DataFrame:
                          "per_1000": (g.mean() * 1000).round(1)})
 
 
-def bar(ax, table: pd.DataFrame, title: str) -> None:
+def bar(ax, table: pd.DataFrame, title: str, xlabel: str = OUTCOME["heart"][1]) -> None:
     ax.barh(table.index.astype(str), table["per_1000"], color=BAR)
     for y, (v, n) in enumerate(zip(table["per_1000"], table["n"])):
         ax.text(v, y, f" {v:g}  (n={n:,})", va="center", fontsize=8)
     ax.set_title(title, fontsize=10, loc="left")
-    ax.set_xlabel("Deaths from heart disease or stroke per 1,000 (10 years)", fontsize=8)
+    ax.set_xlabel(xlabel, fontsize=8)
     ax.invert_yaxis()
     ax.spines[["top", "right"]].set_visible(False)
     ax.tick_params(labelsize=8)
@@ -108,7 +117,7 @@ def run(topic: str, clean_path: Path, out_dir: Path) -> Path:
     n, events = len(df), int(df["target"].sum())
     md += ["## Outcome", "",
            f"- People: **{n:,}**",
-           f"- Died of heart disease or stroke within 10 years: **{events:,}** ({events / n * 1000:.1f} per 1,000)"]
+           f"- {OUTCOME.get(topic, OUTCOME['heart'])[0]}: **{events:,}** ({events / n * 1000:.1f} per 1,000)"]
     if "died_any_cause_10y" in df:
         md.append(f"- Died of any cause within 10 years: {int(df['died_any_cause_10y'].sum()):,} "
                   "(deaths from other causes count as no event)")
@@ -148,7 +157,7 @@ def run(topic: str, clean_path: Path, out_dir: Path) -> Path:
     rows = int(np.ceil(len(features) / cols))
     fig, axes = plt.subplots(rows, cols, figsize=(11, 2.4 * rows))
     for ax, f in zip(axes.flat, features):
-        bar(ax, rate_by(df, f), LABELS.get(f, f))
+        bar(ax, rate_by(df, f), LABELS.get(f, f), OUTCOME.get(topic, OUTCOME["heart"])[1])
     for ax in list(axes.flat)[len(features):]:
         ax.axis("off")
     fig.tight_layout(); fig.savefig(out_dir / "event_rate_by_feature.png", dpi=150); plt.close(fig)
