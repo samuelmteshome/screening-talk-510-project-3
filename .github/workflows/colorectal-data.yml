@@ -1,0 +1,33 @@
+name: colorectal data and EDA
+# Downloads the public NHANES files from the CDC, checks the cancer codes against the
+# codebooks, cleans, runs the EDA and commits the reports back to the branch.
+# Raw and clean data stay out of git. Training uses the shared src/train.py once the bucket exists.
+on:
+  workflow_dispatch:
+  push:
+    branches: ["sam/colon-**"]
+    paths: ["topics/colorectal.yaml", "schema.yaml", "src/data/**", "src/eda.py", ".github/workflows/colorectal-data.yml"]
+permissions:
+  contents: write
+jobs:
+  eda:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m src.data.download --topic colorectal
+      - run: python -m src.data.codebook_check --topic colorectal
+      - run: python -m src.data.clean --topic colorectal
+      - run: python -m src.eda --topic colorectal
+      - name: Commit report
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for f in docs/eda/colorectal docs/cleaning/colorectal.md docs/cleaning/colorectal_codes.md data/raw/MANIFEST.json; do [ -e "$f" ] && git add "$f"; done; true
+          git diff --cached --quiet || git commit -m "Colorectal EDA from real NHANES data [skip ci]"
+          git push

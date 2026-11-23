@@ -112,10 +112,13 @@ def validate(df: pd.DataFrame, rules: dict[str, dict[str, Any]], label: str) -> 
             bad = sorted(set(present.unique()) - set(rule["allowed"]))
             if bad:
                 problems.append(f"{col}: unexpected values {bad[:5]}")
-        if "min" in rule and (present < rule["min"]).any():
-            problems.append(f"{col}: values below {rule['min']}")
-        if "max" in rule and (present > rule["max"]).any():
-            problems.append(f"{col}: values above {rule['max']}")
+        for key, low in (("min", True), ("max", False)):
+            if key in rule:
+                off = present[present < rule[key]] if low else present[present > rule[key]]
+                if len(off):
+                    where = f" (cycles {sorted(df.loc[off.index, 'cycle'].unique())})" if "cycle" in df else ""
+                    problems.append(f"{col}: values {'below' if low else 'above'} {rule[key]} "
+                                    f"({len(off)} rows, e.g. {sorted(off.unique())[:5]}{where})")
     if problems:
         raise SchemaError(f"{label} failed schema.yaml checks:\n  " + "\n  ".join(problems))
 
@@ -203,9 +206,41 @@ def build_heart(df: pd.DataFrame, cfg: dict[str, Any]) -> tuple[pd.DataFrame, li
     return out, counts
 
 
+def build_colorectal(df: pd.DataFrame, cfg: dict[str, Any]) -> tuple[pd.DataFrame, list[tuple[str, int]]]:
+    """Adults in the screening ages who answered the cancer question; target = ever told
+    they had colon or rectal cancer (MCQ230A-C)."""
+    data = cfg["data"]
+    counts = [("All participants in the merged files", len(df))]
+    df = df[df["age"].between(data["age_min"], data["age_max"])]
+    counts.append((f"Aged {data['age_min']} to {data['age_max']}", len(df)))
+    df = df[df["ever_cancer"].isin([1, 2])]
+    counts.append(("Answered 'ever told you had cancer' yes or no", len(df)))
+    codes = list(data["cancer_type_codes"].values())
+    crc = df[["cancer_1", "cancer_2", "cancer_3"]].isin(codes).any(axis=1)
+    out = pd.DataFrame(
+        {
+            "SEQN": df["SEQN"].astype("int64"),
+            "cycle": df["cycle"],
+            "target": crc.astype("int64"),
+            "exam_weight": df["exam_weight"].fillna(0).astype("float64"),
+            "age": df["age"].astype("float64"),
+            "sex": df["sex"].map({1: "male", 2: "female"}),
+            "race_eth": df["race_eth"].astype(int).map(RACE_ETH),
+            "bmi": df["bmi"],
+            "ever_smoked": _yes(df["smoked_100"]),
+            "current_smoker": df["smoke_now"].isin([1, 2]).astype("int64"),
+            "diabetes": _yes(df["diabetes_told"]),
+            "other_cancer": ((df["ever_cancer"] == YES) & ~crc).astype("int64"),
+        }
+    )
+    counts.append(("Target: ever told they had colon or rectal cancer", int(out["target"].sum())))
+    return out, counts
+
+
 BUILDERS: dict[str, Callable[[pd.DataFrame, dict[str, Any]], tuple[pd.DataFrame, list]]] = {
     "prostate": build_prostate,
     "heart": build_heart,
+    "colorectal": build_colorectal,
 }
 
 
