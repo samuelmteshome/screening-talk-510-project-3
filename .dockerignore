@@ -1,0 +1,11 @@
+.git
+.github
+**/__pycache__
+data/
+runs/
+wandb/
+docs/
+app/
+tests/
+*.md
+.env

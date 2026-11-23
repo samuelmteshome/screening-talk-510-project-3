@@ -37,16 +37,22 @@ python -m src.train --topic prostate          # or: docker run --env-file .env s
 ```bash
 pytest tests/
 docker build -t screening-talk .
-docker run -p 8080:8080 --env-file .env screening-talk serve
+docker run -p 8080:8080 screening-talk                 # serve; models from models/<topic>/model.joblib or MODEL_URI_<TOPIC>
 curl -s -X POST localhost:8080/predict -H 'Content-Type: application/json' -d @tests/example_request.json
+python scripts/smoke_test.py http://localhost:8080
 ```
+Endpoints: `GET /health`, `GET /topics`, `POST /predict` (risk for one person plus the trial evidence; `/docs` has the schema).
+A topic without a trained model still answers with the trial results. People outside the ages or history the data covers get no number and a reason.
 
 ## Deploy
-```bash
-gcloud builds submit --tag <region>-docker.pkg.dev/<project>/screening/screening-talk
-gcloud run deploy screening-talk --image <region>-docker.pkg.dev/<project>/screening/screening-talk --allow-unauthenticated
-python scripts/smoke_test.py https://<service>.run.app
-```
+1. One-time Google Cloud setup: open Cloud Shell and run `scripts/gcp_setup.sh`. It creates the bucket, image registry,
+   a deploy service account that GitHub Actions uses through Workload Identity Federation (no key file), and a runtime
+   service account, then prints six values to set as GitHub repository **variables**.
+2. Optional: add `WANDB_API_KEY` as a repository secret so training runs log to W&B.
+3. Actions tab, "deploy API to Cloud Run", Run workflow. It trains the models from the public NHANES files, builds
+   the image with them inside, deploys `screening-talk-api` and smoke-tests the live URL (output in the run summary).
+4. Streamlit Community Cloud: new app from this repo, main file `app/streamlit_app.py`, and in the app's secrets
+   `API_URL = "https://<service>.run.app"`.
 
 ## Evidence
 Every number shown in the app comes from `evidence/*.json`, with a source URL and table or page reference.
