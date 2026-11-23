@@ -12,7 +12,7 @@ prostate cancer (PSA test) and colorectal cancer (colonoscopy).
 - **Deployed API:** https://<service>.run.app _(placeholder until the Cloud Run deploy runs)_
 - **Public app:** https://screening-talk.streamlit.app
 - **Demo video:** `docs/demo.mp4` _(85 seconds: questionnaire, heart, prostate, colonoscopy)_
-- **W&B project:** <link> _(placeholder)_
+- **Experiment tracking:** MLflow, see [Experiment tracking](#experiment-tracking)
 
 ## Setup
 ```bash
@@ -43,10 +43,20 @@ python -m src.train_heart [--final]           # heart: 10-year death from linked
 ```
 Without a bucket, add `--data-uri data/clean/<topic>/clean.parquet --allow-unverified --no-upload`.
 Each run folder holds `model.joblib`, `model_card.json`, `metrics.json`, `calibration.png`, `run_metadata.yaml`
-(git commit, image, Python and package versions, seed, data hash) and `train.log`, all logged to W&B.
+(git commit, image, Python and package versions, seed, data hash) and `train.log`, all logged to MLflow.
 
 All three at once on GitHub: Actions tab, **train all models (final test-set run)**. It downloads, cleans, trains,
 scores each test set once and commits `models/<topic>/` and `docs/models/results.md`.
+
+## Experiment tracking
+Every training run (`src.train` and `src.train_heart`) is an MLflow run: parameters (topic, features, chosen C, C grid,
+training cycles, data URI and SHA-256), metrics (AUC with 95% CI, Brier score, baseline AUC and Brier, Brier skill,
+validation Brier for each C), the calibration and subgroup tables, and every run file as an artifact
+(model, model card, metrics, calibration chart, run metadata, log). Runs are stored locally in `mlflow.db` and `mlruns/`.
+```bash
+mlflow ui --backend-store-uri sqlite:///mlflow.db   # then open http://127.0.0.1:5000
+```
+Set `MLFLOW_TRACKING_URI` to log to another MLflow server instead.
 
 ## Test the API locally
 ```bash
@@ -63,10 +73,9 @@ A topic without a trained model still answers with the trial results. People out
 1. One-time Google Cloud setup: open Cloud Shell and run `scripts/gcp_setup.sh`. It creates the bucket, image registry,
    a deploy service account that GitHub Actions uses through Workload Identity Federation (no key file), and a runtime
    service account, then prints six values to set as GitHub repository **variables**.
-2. Optional: add `WANDB_API_KEY` as a repository secret so training runs log to W&B.
-3. Actions tab, "deploy API to Cloud Run", Run workflow. It trains the models from the public NHANES files, builds
+2. Actions tab, "deploy API to Cloud Run", Run workflow. It trains the models from the public NHANES files, builds
    the image with them inside, deploys `screening-talk-api` and smoke-tests the live URL (output in the run summary).
-4. Streamlit Community Cloud: new app from this repo, main file `app/streamlit_app.py`, and in the app's secrets
+3. Streamlit Community Cloud: new app from this repo, main file `app/streamlit_app.py`, and in the app's secrets
    `API_URL = "https://<service>.run.app"`.
 
 ## Evidence
@@ -81,9 +90,9 @@ Alberto owns the early pipeline work so sam can build serving on top of it.
 - [x] Raw snapshot: dated copy in `gs://<bucket>/raw/<date>/`, URL, time and hash per file in `data/raw/MANIFEST.json`
 - [x] Schema check: fill `schema.yaml`, make `clean.py` fail on missing or renamed columns; fill `feature_sources` in `topics/*.yaml`
 - [x] Evidence files: check every number in `evidence/*.json` against the papers, fill `verified_by`
-- [x] Training + tracking: `src/features.py`, `src/train.py`, `src/evaluate.py`, W&B logging, calibration bar chart
-- [x] Run metadata: `runs/<run_id>/run_metadata.yaml` (git commit, Docker image, Python and package versions, seed, data hash) and a run log file uploaded to W&B
-- [x] Prostate model: `topics/prostate.yaml`, PSA >= 4.0 target, logged W&B run
+- [x] Training + tracking: `src/features.py`, `src/train.py`, `src/evaluate.py`, MLflow tracking, calibration bar chart
+- [x] Run metadata: `runs/<run_id>/run_metadata.yaml` (git commit, Docker image, Python and package versions, seed, data hash) and a run log file logged to MLflow
+- [x] Prostate model: `topics/prostate.yaml`, PSA >= 4.0 target, logged MLflow run
 
 ### sam (later: models on top, serving, deployment)
 - [x] Heart model: `topics/heart.yaml`, NHANES 1999-2008 linked mortality, 10-year CVD death target, `src/train_heart.py`

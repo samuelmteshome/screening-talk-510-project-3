@@ -6,7 +6,6 @@ name: deploy API to Cloud Run
 # Google auth uses Workload Identity Federation: no key file. Set these repository
 # *variables* (Settings -> Secrets and variables -> Actions -> Variables), printed by scripts/gcp_setup.sh:
 #   GCP_PROJECT_ID, GCP_REGION, GCP_WIF_PROVIDER, GCP_DEPLOY_SA, GCP_RUNTIME_SA, GCS_BUCKET
-# Optional secret: WANDB_API_KEY (training runs are logged to W&B when it is set).
 on:
   workflow_dispatch:
 permissions:
@@ -15,7 +14,6 @@ permissions:
 env:
   REGION: ${{ vars.GCP_REGION || 'us-east1' }}
   IMAGE: ${{ vars.GCP_REGION || 'us-east1' }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/screening-talk/api:${{ github.sha }}
-  WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
 jobs:
   deploy:
     runs-on: ubuntu-latest
