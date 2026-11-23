@@ -37,6 +37,13 @@ def compare_block(base: float, rr: float, outcome: str, certain: bool = True) ->
             "without": line.without, "with": line.with_, "outcome": ha.OUTCOME_WORDS[outcome]}
 
 
+def checked_note(ev: dict) -> str:
+    """Says what a source's numbers were checked against, or that they weren't yet."""
+    if ev.get("verified_by") is None:
+        return "Numbers not yet checked against the source."
+    return f"Numbers checked against the {escape(ev.get('verified_against', 'source'))}."
+
+
 def evidence_blocks(topic: Topic) -> list[dict]:
     """The topic's trial results: grouped bars where we have pairs, else a list of numbers."""
     out = []
@@ -55,8 +62,7 @@ def evidence_blocks(topic: Topic) -> list[dict]:
                         "rows": [{"label": lab, "values": [vals[(lab, g)] for g in groups]} for lab in labels]})
         else:
             out.append({"type": "numbers", "rows": [[k.capitalize(), f"{v:g}"] for k, v in number_rows(ev)]})
-        if ev.get("verified_by") is None:
-            out.append({"type": "caption", "html": "Numbers not yet checked against the full paper."})
+        out.append({"type": "caption", "html": checked_note(ev)})
     return out
 
 
