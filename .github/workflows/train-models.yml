@@ -3,7 +3,8 @@ name: train all models (final test-set run)
 # models, scores each once on its held-out test cycles, and commits the metrics, model
 # cards and calibration charts to models/<topic>/ plus docs/models/results.md.
 # Model files (.joblib) and run folders are kept as a workflow artifact, not in git.
-# W&B: logged online when the WANDB_API_KEY secret is set, otherwise offline (in the artifact).
+# Every run is tracked in MLflow; mlflow.db and mlruns/ are kept in the workflow artifact
+# (download it and run `mlflow ui --backend-store-uri sqlite:///mlflow.db`).
 on:
   workflow_dispatch:
   push:
@@ -11,8 +12,6 @@ on:
     paths: [".github/workflows/train-models.yml", "src/train.py", "src/train_heart.py", "src/features.py", "topics/*.yaml"]
 permissions:
   contents: write
-env:
-  WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
 jobs:
   train:
     runs-on: ubuntu-latest
@@ -50,7 +49,8 @@ jobs:
           path: |
             models/
             runs/
-            wandb/
+            mlflow.db
+            mlruns/
       - name: Commit results
         run: |
           git config user.name "github-actions[bot]"

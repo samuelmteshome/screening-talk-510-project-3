@@ -39,11 +39,6 @@ def clean_file(tmp_path):
     return path
 
 
-@pytest.fixture(autouse=True)
-def no_wandb_upload(monkeypatch):
-    monkeypatch.setenv("WANDB_MODE", "disabled")
-
-
 def test_feature_types_and_pipeline_handle_missing_values(prostate_cfg):
     assert feature_types(prostate_cfg) == {"age": "spline", "race_eth": "categorical", "bmi": "numeric"}
     X = pd.DataFrame({"age": [55.0, 60.0, 65.0, 68.0], "race_eth": RACES[:4], "bmi": [27.0, np.nan, 31.0, 24.0]})
@@ -94,6 +89,33 @@ def test_train_writes_model_and_metadata(tmp_path, config, prostate_cfg, clean_f
     model = joblib.load(run_dir / "model.joblib")  # what the API will load
     request = pd.DataFrame({"age": [56.0], "race_eth": ["non_hispanic_white"], "bmi": [27.5]})
     assert 0 < model.predict_proba(request)[0, 1] < 1
+
+
+def test_train_logs_the_run_to_mlflow(tmp_path, config, prostate_cfg, clean_file):
+    from mlflow.tracking import MlflowClient
+
+    run_dir = run("prostate", data_uri=str(clean_file), allow_unverified=True, upload=False,
+                  runs_dir=tmp_path / "runs", config=config, topic_cfg=prostate_cfg)
+    client = MlflowClient()
+    logged = client.get_run(run_dir.name)
+    assert logged.info.status == "FINISHED"
+    assert logged.info.run_name == "prostate-validation"
+    assert logged.data.params["topic"] == "prostate"
+    assert len(logged.data.params["data_sha256"]) == 64
+    assert 0 <= logged.data.metrics["val/auc"] <= 1
+    files = {f.path for f in client.list_artifacts(run_dir.name)}
+    assert {"model.joblib", "model_card.json", "metrics.json", "run_metadata.yaml", "train.log", "calibration.png"} <= files
+    assert {f.path for f in client.list_artifacts(run_dir.name, "tables")} >= {"tables/calibration.json"}
+
+
+def test_failed_run_is_marked_failed(tmp_path, config, prostate_cfg, clean_file):
+    from mlflow.tracking import MlflowClient
+
+    with pytest.raises(Exception):
+        run("prostate", data_uri=str(clean_file), upload=False, runs_dir=tmp_path / "runs",
+            config=config, topic_cfg=prostate_cfg)  # no recorded hash, so ingest refuses the data
+    runs = MlflowClient().search_runs([MlflowClient().get_experiment_by_name("screening-talk").experiment_id])
+    assert runs[0].info.status == "FAILED"
 
 
 def test_final_run_scores_test_set(tmp_path, config, prostate_cfg, clean_file):
