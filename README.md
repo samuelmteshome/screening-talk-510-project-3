@@ -8,7 +8,7 @@ prostate cancer (PSA test) and colorectal cancer (colonoscopy).
 > Educational demo. Not medical advice. Nothing entered in the app is stored.
 
 ## Links
-- **Dataset:** NHANES public files (see `topics/*.yaml`); cleaned data: `gs://<bucket>/clean/v1/` _(placeholder)_
+- **Dataset:** NHANES public files (see `topics/*.yaml`). Cleaned data in Google Cloud Storage: `gs://screening-talk-2611-data/clean/<topic>/v1/clean.parquet` (prostate, heart, colorectal), dated raw copies in `gs://screening-talk-2611-data/raw/2026-11-23/`, SHA-256 per file in `data/raw/MANIFEST.json`
 - **Deployed API:** https://<service>.run.app _(placeholder until the Cloud Run deploy runs)_
 - **Public app:** https://screening-talk.streamlit.app
 - **Demo video:** `docs/demo.mp4` _(85 seconds: questionnaire, heart, prostate, colonoscopy)_
