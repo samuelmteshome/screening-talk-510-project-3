@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import ssl
 import time
 import urllib.request
 from datetime import datetime, timezone
@@ -40,6 +41,19 @@ def local_name(entry: str) -> str:
     return entry.rsplit("/", 1)[-1] if "://" in entry else f"{entry}.xpt"
 
 
+def ssl_context() -> ssl.SSLContext:
+    """Verify HTTPS with certifi's CA bundle when available.
+
+    Some Python builds on macOS do not trust the certificate chain of
+    ftp.cdc.gov (linked mortality files) with their default store.
+    """
+    try:
+        import certifi
+    except ImportError:  # pragma: no cover
+        return ssl.create_default_context()
+    return ssl.create_default_context(cafile=certifi.where())
+
+
 def fetch(url: str, dest: Path, retries: int = 3) -> None:
     """Download ``url`` to ``dest``, retrying on network errors."""
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -47,7 +61,7 @@ def fetch(url: str, dest: Path, retries: int = 3) -> None:
     for attempt in range(1, retries + 1):
         try:
             request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-            with urllib.request.urlopen(request, timeout=60) as response, open(tmp, "wb") as fh:
+            with urllib.request.urlopen(request, timeout=60, context=ssl_context()) as response, open(tmp, "wb") as fh:
                 fh.write(response.read())
             tmp.replace(dest)
             return
@@ -105,7 +119,7 @@ def download_topic(
                 }
             if snapshot:
                 uri = resolve_uri(config["data"]["raw_snapshot_uri"], config).format(
-                    date=today, topic=topic, cycle=cycle, file=Path(local_name(entry)).stem
+                    date=today, topic=topic, cycle=cycle, file=local_name(entry)
                 )
                 storage.put(dest, uri)
                 manifest.setdefault(key, {})["snapshot_uri"] = uri
