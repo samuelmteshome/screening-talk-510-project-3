@@ -1,0 +1,262 @@
+<style>
+:root { --ink:#0f172a; --muted:#64748b; --line:#cbd5e1; --soft:#f8fafc; }
+* { box-sizing:border-box; }
+body { margin:0; font-family:"Source Sans Pro", -apple-system, "Segoe UI", sans-serif; color:var(--ink); }
+.wrap { display:flex; gap:28px; align-items:flex-start; padding:4px 6px 24px; }
+.left { flex:0 0 30%; max-width:360px; position:sticky; top:0; }
+.right { flex:1; min-width:0; }
+.hint { text-align:center; color:var(--muted); font-size:15px; margin:-6px 0 0; }
+.search { position:relative; margin-bottom:18px; }
+.search input { width:100%; font:inherit; font-size:17px; padding:12px 16px; border:2px solid #e2e8f0; border-radius:14px; outline:none; }
+.search input:focus { border-color:#94a3b8; }
+#sugg { position:absolute; left:0; right:0; top:52px; background:#fff; border:1px solid #e2e8f0; border-radius:12px;
+        box-shadow:0 10px 30px rgba(15,23,42,.12); z-index:5; display:none; overflow:hidden; }
+#sugg button { display:block; width:100%; text-align:left; border:0; background:#fff; padding:10px 16px; font:inherit; font-size:16px; cursor:pointer; }
+#sugg button:hover, #sugg button.hi { background:var(--soft); }
+#sugg small { color:var(--muted); margin-left:8px; }
+#stage { position:relative; }
+#wires { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
+#wires path { fill:none; stroke:var(--line); stroke-width:2.5; }
+#wires path.new { stroke-dasharray:600; stroke-dashoffset:600; animation:draw .5s ease-out forwards; }
+.tree { display:grid; grid-template-columns: minmax(120px,.8fr) minmax(150px,1fr) minmax(200px,1.4fr); column-gap:56px; align-items:center; min-height:120px; }
+.col { display:flex; flex-direction:column; gap:14px; justify-content:center; }
+.node { font:inherit; font-size:17px; text-align:left; padding:14px 18px; border-radius:16px; border:2px solid var(--line);
+        background:#fff; cursor:pointer; color:var(--ink); transition: box-shadow .15s, transform .15s, background .15s; }
+.node:hover, .node:focus-visible { box-shadow:0 4px 14px rgba(15,23,42,.12); outline:none; transform:translateY(-1px); }
+.node.organ { color:#fff; font-weight:700; font-size:20px; }
+.node.branch { font-weight:700; }
+.node.on { border-width:3px; font-weight:700; }
+.node .chev { float:right; margin-left:10px; opacity:.7; }
+.new { animation: grow .4s ease-out both; }
+.empty { border:2px dashed #e2e8f0; border-radius:16px; padding:28px; color:var(--muted); font-size:17px; text-align:center; }
+.note { margin-top:14px; background:#eff6ff; border-radius:12px; padding:10px 14px; font-size:15px; color:#1e3a8a; }
+#detail:empty { display:none; }
+.card { margin-top:22px; border:1px solid #e2e8f0; border-left:6px solid var(--accent, #0f766e); border-radius:16px;
+        padding:18px 22px; background:#fff; box-shadow:0 6px 20px rgba(15,23,42,.06); }
+.card h2 { margin:0 0 10px; font-size:22px; }
+.card h3 { margin:18px 0 6px; font-size:17px; }
+.card p { margin:8px 0; font-size:16px; line-height:1.45; }
+.card .cap { color:var(--muted); font-size:13.5px; }
+.card a { color:#1d4ed8; }
+.bars { margin:6px 0 14px; }
+.bars .row { display:grid; grid-template-columns: 150px 1fr; align-items:center; gap:10px; margin:4px 0; font-size:14.5px; }
+.bars .track { position:relative; height:24px; background:var(--soft); border-radius:6px; }
+.bars .fill { position:absolute; left:0; top:0; bottom:0; border-radius:6px; width:0; transition: width .6s ease-out; }
+.bars .val { position:absolute; top:2px; font-size:14px; font-weight:700; }
+.bars .title { font-size:14px; color:var(--muted); margin:10px 0 2px; }
+.stat { font-size:34px; font-weight:700; margin:4px 0 0; }
+.stat + .cap { margin-top:0; }
+.bp { display:flex; gap:18px; flex-wrap:wrap; margin:6px 0 10px; font-size:15px; }
+.bp input, .bp select { font:inherit; font-size:16px; padding:6px 8px; border:2px solid #e2e8f0; border-radius:10px; width:110px; }
+table.nums { border-collapse:collapse; font-size:15px; margin:6px 0 12px; }
+table.nums td { padding:3px 14px 3px 0; border-bottom:1px solid #f1f5f9; }
+@keyframes grow { from { opacity:0; transform:translateX(-12px); } to { opacity:1; transform:none; } }
+@keyframes draw { to { stroke-dashoffset:0; } }
+@media (max-width: 860px) {
+  .wrap { flex-direction:column; } .left { position:static; max-width:300px; margin:0 auto; }
+  .tree { grid-template-columns: 1fr 1fr 1.3fr; column-gap:26px; } .node { font-size:15px; padding:10px 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .new, #wires path.new { animation:none; } .bars .fill { transition:none; } }
+</style>
+<div class="wrap">
+  <div class="left">{{FIGURE}}<p class="hint">Tap an organ, or search</p></div>
+  <div class="right">
+    <div class="search"><input id="q" autocomplete="off" placeholder="Search a medicine, test or organ, e.g. statin, PSA, colonoscopy" aria-label="Search"><div id="sugg"></div></div>
+    <div id="stage">
+      <svg id="wires"></svg>
+      <div class="tree"><div class="col" id="c0"></div><div class="col" id="c1"></div><div class="col" id="c2"></div></div>
+      <div id="extra"></div>
+    </div>
+    <div id="detail"></div>
+  </div>
+</div>
+<script>
+const DATA = {{DATA}};
+const S = { organ: null, branch: null, option: null };
+let shown = new Set();
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const organ = () => DATA.organs.find((o) => o.id === S.organ);
+const branch = () => organ() && organ().branches.find((b) => b.id === S.branch);
+const option = () => branch() && branch().options.find((o) => o.id === S.option);
+
+function node(cls, key, label, color, on, onclick, chev) {
+  const b = document.createElement("button");
+  b.className = `node ${cls}${on ? " on" : ""}${shown.has(key) ? "" : " new"}`;
+  b.dataset.key = key;
+  if (cls === "organ") { b.style.background = color; b.style.borderColor = color; }
+  else if (on) { b.style.background = color + "1a"; b.style.borderColor = color; }
+  b.innerHTML = esc(label) + (chev ? `<span class="chev">${chev}</span>` : "");
+  b.onclick = onclick;
+  return b;
+}
+
+function draw() {
+  const o = organ();
+  ["c0", "c1", "c2"].forEach((c) => ($(c).innerHTML = ""));
+  $("extra").innerHTML = "";
+  const now = new Set();
+  if (!o) {
+    $("c1").innerHTML = '<div class="empty">Tap an organ on the body to see your options.</div>';
+  } else {
+    now.add("o:" + o.id);
+    $("c0").appendChild(node("organ", "o:" + o.id, o.label, o.color, true, () => set(o.id, null, null)));
+    if (o.eligible) {
+      for (const b of o.branches) {
+        const k = "b:" + o.id + b.id; now.add(k);
+        $("c1").appendChild(node("branch", k, b.label, o.color, b.id === S.branch,
+          () => set(o.id, S.branch === b.id ? null : b.id, null), b.id === S.branch ? "‹" : "›"));
+      }
+      const br = branch();
+      if (br) for (const op of br.options) {
+        const k = "p:" + o.id + br.id + op.id; now.add(k);
+        $("c2").appendChild(node("leaf", k, op.label, o.color, op.id === S.option,
+          () => set(o.id, br.id, S.option === op.id ? null : op.id)));
+      }
+      if (o.note) $("extra").innerHTML = `<div class="note">${esc(o.note)}</div>`;
+    }
+  }
+  shown = now;
+  requestAnimationFrame(wires);
+  detail();
+}
+
+function wires() {
+  const svg = $("wires"), base = $("stage").getBoundingClientRect();
+  const mid = (el, side) => { const r = el.getBoundingClientRect();
+    return [ (side ? r.right : r.left) - base.left, r.top + r.height / 2 - base.top ]; };
+  const link = (a, b, fresh) => { const [x1, y1] = mid(a, 1), [x2, y2] = mid(b, 0), m = (x1 + x2) / 2;
+    return `<path class="${fresh ? "new" : ""}" d="M${x1},${y1} C${m},${y1} ${m},${y2} ${x2},${y2}"/>`; };
+  let out = "";
+  const root = $("c0").firstChild;
+  if (root) for (const b of $("c1").querySelectorAll(".node")) out += link(root, b, b.classList.contains("new"));
+  const open = $("c1").querySelector(".node.on");
+  if (open) for (const p of $("c2").querySelectorAll(".node")) out += link(open, p, p.classList.contains("new"));
+  svg.innerHTML = out;
+}
+
+function bars(rows, groups, colors, unit) {
+  const max = Math.max(1, ...rows.flatMap((r) => r.values));
+  let h = `<div class="bars">`;
+  for (const r of rows) {
+    if (r.label) h += `<div class="title">${esc(r.label)}${unit ? ", " + esc(unit) : ""}</div>`;
+    r.values.forEach((v, i) => {
+      const w = (v / max) * 100;
+      h += `<div class="row"><span>${esc(groups[i])}</span><div class="track"><div class="fill" data-w="${w}" style="background:${colors[i]}"></div>` +
+           (w > 85 ? `<span class="val" style="right:8px;color:#fff">` : `<span class="val" style="left:calc(${w}% + 6px)">`) +
+           `${(+v).toLocaleString()}</span></div></div>`;
+    });
+  }
+  return h + "</div>";
+}
+
+function compareHtml(b, color) {
+  return `<p>${b.html}</p>` + bars([{ label: `People who would ${b.outcome} in 10 years, out of ${b.denom.toLocaleString()} like you`,
+    values: [b.without, b.with] }], ["Without it", "With it"], ["#94a3b8", color], "");
+}
+
+function bpBlock(b, color) {
+  // Same maths as heart_actions.compare / sentence, redone here so the target can change without a reload.
+  const opts = []; for (let t = 110; t <= 160; t += 5) opts.push(t);
+  // Default target: 130, or 10 below the current number if that is already 130 or lower.
+  const tgt0 = Math.max(110, Math.min(130, Math.floor((b.current - 10) / 5) * 5));
+  const id = "bp" + Math.random().toString(36).slice(2, 7);
+  setTimeout(() => {
+    const cur = $(id + "c"), tgt = $(id + "t"), out = $(id + "o");
+    const upd = () => {
+      const c = +cur.value, t = +tgt.value;
+      if (!(c > t)) { out.innerHTML = "<p>Pick a target below your current number.</p>"; return; }
+      out.innerHTML = `<p class="cap">Lowering by ${c - t} points.</p>` + b.outcomes.map((o) => {
+        const rr = Math.pow(o.per5, (c - t) / 5), denom = o.base >= 0.05 ? 100 : 1000;
+        const w0 = Math.round(o.base * denom), w1 = Math.round(o.base * rr * denom), fewer = w0 - w1;
+        let s = `Out of ${denom.toLocaleString()} people like you, about <b>${w0}</b> would ${o.outcome} in the next 10 years without this, and about <b>${w1}</b> with it.`;
+        s += !o.certain ? " The studies could not rule out <b>no difference</b>, so treat this as uncertain."
+           : fewer > 0 ? ` That is about <b>${fewer} fewer</b> out of ${denom.toLocaleString()}.`
+           : fewer < 0 ? ` That is about <b>${-fewer} more</b> out of ${denom.toLocaleString()}.`
+           : " For people at your risk, the difference rounds to zero.";
+        return compareHtml({ html: s, outcome: o.outcome, denom, without: w0, with: w1 }, color);
+      }).join("");
+      grow();
+    };
+    cur.oninput = upd; tgt.onchange = upd; upd();
+  });
+  return `<div class="bp"><label>Your top blood pressure number now<br><input id="${id}c" type="number" min="100" max="220" value="${Math.round(b.current)}"></label>` +
+    `<label>Lower it to<br><select id="${id}t">${opts.map((t) => `<option${t === tgt0 ? " selected" : ""}>${t}</option>`).join("")}</select></label></div>` +
+    (b.known ? "" : `<p class="cap">You skipped your blood pressure, so ${Math.round(b.current)} is filled in. Change it to yours.</p>`) +
+    `<div id="${id}o"></div>`;
+}
+
+function blocksHtml(blocks, color) {
+  return blocks.map((b) => {
+    switch (b.type) {
+      case "compare": return compareHtml(b, color);
+      case "bp": return bpBlock(b, color);
+      case "bars": return bars(b.rows, b.groups, [color, "#94a3b8"], b.unit);
+      case "numbers": return `<table class="nums">${b.rows.map((r) => `<tr><td>${esc(r[0])}</td><td><b>${esc(r[1])}</b></td></tr>`).join("")}</table>`;
+      case "stat": return `<p class="stat">${esc(b.big)}</p><p class="cap">${esc(b.label)}</p>`;
+      case "heading": return `<h3>${b.html}</h3>`;
+      case "source": return `<p><b>${b.html}</b>${b.caption ? `<br><span class="cap">${esc(b.caption)}</span>` : ""}</p>`;
+      case "caption": return `<p class="cap">${b.html}</p>`;
+      default: return `<p>${b.html}</p>`;
+    }
+  }).join("");
+}
+
+function grow() {
+  requestAnimationFrame(() => document.querySelectorAll(".fill").forEach((f) => (f.style.width = f.dataset.w + "%")));
+}
+
+function detail() {
+  const o = organ(), op = option(), d = $("detail");
+  if (o && !o.eligible) {
+    d.innerHTML = `<div class="card new" style="--accent:${o.color}"><h2>No number for you here</h2><p>${esc(o.note)}</p>` +
+      `<h3>What the research found (for people outside your group)</h3>${blocksHtml(o.evidence, o.color)}</div>`;
+  } else if (op) {
+    d.innerHTML = `<div class="card new" style="--accent:${o.color}"><h2>${esc(op.label)}</h2>${blocksHtml(op.detail, o.color)}` +
+      `<p class="cap">Averages from research studies, not a promise for one person. Use this to start a conversation with your doctor.</p></div>`;
+  } else { d.innerHTML = ""; return; }
+  grow();
+  setTimeout(() => d.firstChild && d.firstChild.scrollIntoView({ behavior: "smooth", block: "nearest" }), 80);
+}
+
+function set(o, b, p) { S.organ = o; S.branch = b; S.option = p; draw(); }
+
+// Body map: organs carry data-organ.
+document.querySelectorAll("[data-organ]").forEach((el) => {
+  const go = (e) => { e.preventDefault(); set(el.dataset.organ, null, null); };
+  el.addEventListener("click", go);
+  el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") go(e); });
+});
+
+// Search with suggestions; picking one opens the chart at that spot.
+const q = $("q"), sugg = $("sugg");
+let hits = [], hi = 0;
+function score(names, s) {
+  return Math.min(...names.map((n) => (n === s ? 0 : n.startsWith(s) ? 1 : n.includes(s) ? 2 : 9)));
+}
+function showSugg() {
+  const s = q.value.trim().toLowerCase();
+  hits = s.length < 2 ? [] : DATA.search.map((h) => [score(h.names, s), h]).filter((x) => x[0] < 9)
+    .sort((a, b) => a[0] - b[0]).map((x) => x[1]).slice(0, 6);
+  hi = 0;
+  renderSugg(s);
+}
+function renderSugg(s) {
+  sugg.style.display = hits.length || s.length >= 2 ? "block" : "none";
+  sugg.innerHTML = hits.length ? hits.map((h, i) => `<button data-i="${i}" class="${i === hi ? "hi" : ""}">${esc(h.label)}<small>${esc(h.where)}</small></button>`).join("")
+    : '<button disabled>No matches. Try a medicine, a test, or an organ.</button>';
+  sugg.querySelectorAll("button[data-i]").forEach((b) => (b.onmousedown = (e) => { e.preventDefault(); pick(hits[+b.dataset.i]); }));
+}
+function pick(h) { q.value = ""; sugg.style.display = "none"; set(h.organ, h.branch, h.option); }
+q.addEventListener("input", showSugg);
+q.addEventListener("blur", () => setTimeout(() => (sugg.style.display = "none"), 100));
+q.addEventListener("keydown", (e) => {
+  if (!hits.length) return;
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); hi = (hi + (e.key === "ArrowDown" ? 1 : hits.length - 1)) % hits.length; renderSugg(q.value.trim()); }
+  if (e.key === "Enter") { e.preventDefault(); pick(hits[hi]); }
+});
+window.addEventListener("resize", () => requestAnimationFrame(wires));
+
+const st = DATA.start || {};
+set(st.organ || null, st.branch || null, st.option || null);
+</script>

@@ -104,7 +104,8 @@ def _body(sex: str) -> str:
     return f'<g class="figure">{"".join(parts)}</g>'
 
 
-def _organ(sex: str, t: Topic, i: int, off: bool, params: dict) -> str:
+def _organ(sex: str, t: Topic, i: int, off: bool, params: dict | None) -> str:
+    """One organ glyph and callout. params=None: no link, the page's script handles the click."""
     spec = ORGANS[t.id]
     cx, cy, size = spec[sex]
     color = spec["color"]
@@ -112,10 +113,14 @@ def _organ(sex: str, t: Topic, i: int, off: bool, params: dict) -> str:
     scale = size / 24
     lx = LABEL_X[sex]
     note = "Not covered for you" if off else t.tool
-    q = escape(organ_link(params, t.id))
+    if params is None:
+        target = f'data-organ="{t.id}" tabindex="0" role="button"'
+    else:
+        q = escape(organ_link(params, t.id))
+        target = f'href="{q}" data-q="{q}" target="_top"'
     pill_w = max(len(t.organ) * 21, len(note) * 12.5) + 85
     return (
-        f'<a class="organ-link{" off" if off else ""}" href="{q}" data-q="{q}" target="_top" '
+        f'<a class="organ-link{" off" if off else ""}" {target} '
         f'aria-label="{escape(t.organ)}: {escape(note)}"><title>{escape(t.organ)}: {escape(note)}</title>'
         f'<g class="organ" style="animation-delay:{delay:.2f}s">'
         f'<circle class="halo" cx="{cx}" cy="{cy}" r="{size * 0.62:.0f}" fill="{color}" '
@@ -146,3 +151,12 @@ def render(sex: str, topics: list[Topic], params: dict, ineligible: frozenset[st
         f'aria-label="Front view of a {who}; click an organ to see results">'
         + _body(sex) + organs + "</svg></div>" + CLICK_SCRIPT
     )
+
+
+def inline(sex: str, topics: list[Topic], ineligible: frozenset[str] = frozenset()) -> str:
+    """CSS + SVG of the figure with organs marked data-organ=<topic>, for the one-page explorer."""
+    x, y, w, h = VIEW[sex]
+    organs = "".join(_organ(sex, t, i, t.id in ineligible, None) for i, t in enumerate(topics))
+    who = "man" if sex == "male" else "woman"
+    return (CSS + f'<div class="map"><svg viewBox="{x} {y} {w} {h}" role="img" '
+            f'aria-label="Front view of a {who}; click an organ">' + _body(sex) + organs + "</svg></div>")
