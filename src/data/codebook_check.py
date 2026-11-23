@@ -35,6 +35,12 @@ def codes_from_codebook(html: str, variable: str = "MCQ230A") -> dict[str, int]:
     return {unescape(desc).strip().lower(): int(code) for code, desc in ROW.findall(section)}
 
 
+def match_codes(found: dict[str, int], expected: dict[str, int]) -> dict[str, int | None]:
+    """Code for each expected name. Labels can carry extra words, e.g. "Rectum (rectal)"."""
+    return {name: next((c for d, c in found.items() if d == name or d.startswith(name + " ")), None)
+            for name in expected}
+
+
 def fetch(url: str) -> str:
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(req, timeout=60) as r:
@@ -66,8 +72,11 @@ def main() -> None:
             lines.append(f"| {cycle} | [{mcq}]({url}) | " + " | ".join("?" for _ in expected) + " | page not readable |")
             unreadable += 1
             continue
-        got = {name: found.get(name) for name in expected}
+        got = match_codes(found, expected)
         ok = got == expected
+        if not ok:
+            print(f"{cycle}: labels near the expected ones: "
+                  f"{ {d: c for d, c in found.items() if any(n[:4] in d for n in expected)} }")
         bad += not ok
         lines.append(f"| {cycle} | [{mcq}]({url}) | " + " | ".join(str(got[n]) for n in expected) + f" | {'yes' if ok else 'NO'} |")
     out = REPO_ROOT / "docs" / "cleaning" / f"{args.topic}_codes.md"

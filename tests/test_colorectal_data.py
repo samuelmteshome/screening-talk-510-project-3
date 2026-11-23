@@ -3,7 +3,7 @@ import pandas as pd
 
 from src.config import load_topic
 from src.data.clean import clean_topic
-from src.data.codebook_check import codes_from_codebook
+from src.data.codebook_check import codes_from_codebook, match_codes
 
 
 def test_clean_applies_colorectal_rules(tmp_path, config, colorectal_cfg):
@@ -19,11 +19,12 @@ def test_clean_applies_colorectal_rules(tmp_path, config, colorectal_cfg):
 
 def test_codebook_parser_finds_colon_and_rectum():
     html = """<div id="MCQ230A"><table><tr><td>14</td><td>Breast</td></tr>
-    <tr><td>16</td><td>Colon</td></tr><tr><td>31</td><td>Rectum</td></tr></table></div>
+    <tr><td>16</td><td>Colon</td></tr><tr><td>31</td><td>Rectum (rectal)</td></tr></table></div>
     <div id="MCQ230B"><tr><td>16</td><td>Something else</td></tr></div>"""
     codes = codes_from_codebook(html)
     assert codes["colon"] == 16 and codes["breast"] == 14
     assert "something else" not in codes
+    assert match_codes(codes, {"colon": 16, "rectum": 31}) == {"colon": 16, "rectum": 31}
 
 
 def test_colorectal_config_matches_shared_trainer_layout():
