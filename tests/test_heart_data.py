@@ -72,7 +72,6 @@ def test_train_heart_on_fixtures(tmp_path, config, heart_cfg, monkeypatch):
     cfg["split"] = {"train_cycles": ["2001-2002"], "val_cycles": ["2005-2006"], "test_cycles": []}
     monkeypatch.setattr(train_heart, "load_topic", lambda topic: cfg)
     monkeypatch.setattr(train_heart, "REPO_ROOT", tmp_path)
-    monkeypatch.delenv("WANDB_API_KEY", raising=False)
     res = train_heart.run(path)
     assert set(res) == {"baseline_age_sex", "model"}
     assert 0 <= res["model"]["val"]["auc"] <= 1

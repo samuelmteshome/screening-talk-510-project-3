@@ -5,15 +5,14 @@ Usage:
 
 Fits on the training cycles and reports on the validation cycle. ``--final`` also
 reports on the held-out test cycle (run once, after the model is chosen).
-Compares against an age + sex baseline. Logs to Weights & Biases when
-WANDB_API_KEY is set. Writes models/heart/model.joblib and docs/models/heart.md.
+Compares against an age + sex baseline. Logs the run to MLflow (src/tracking.py).
+Writes models/heart/model.joblib and docs/models/heart.md.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import logging
-import os
 from pathlib import Path
 
 import joblib
@@ -30,7 +29,8 @@ from sklearn.metrics import brier_score_loss, roc_auc_score  # noqa: E402
 from sklearn.pipeline import Pipeline  # noqa: E402
 from sklearn.preprocessing import OneHotEncoder, StandardScaler  # noqa: E402
 
-from src.config import REPO_ROOT, load_topic  # noqa: E402
+from src import tracking  # noqa: E402
+from src.config import REPO_ROOT, load_config, load_topic  # noqa: E402
 
 log = logging.getLogger(__name__)
 BASELINE = ["age", "sex"]
@@ -120,13 +120,14 @@ def run(clean_path: Path, final: bool = False) -> dict:
     lines += [f"| {r.term} | {r.odds_ratio} |" for r in odds_ratios(model).itertuples()]
     (out_docs / "heart.md").write_text("\n".join(lines) + "\n")
 
-    if os.environ.get("WANDB_API_KEY"):
-        import wandb
-        run_ = wandb.init(project="screening-talk", job_type="train", name="heart-logreg",
-                          config={"topic": "heart", "features": features, **sp})
-        run_.log({f"{n}/{s}/{k}": v for n, r in results.items() for s, m in r.items() for k, v in m.items()})
-        run_.log({"calibration_val": wandb.Image(str(out_docs / "heart_calibration_val.png"))})
-        run_.finish()
+    with tracking.run(load_config(), "heart-final" if final else "heart-validation",
+                      {"topic": "heart", "split": "test" if final else "val", "script": "train_heart"}):
+        tracking.log_run(
+            params={"topic": "heart", "features": features, "final": final, **sp},
+            metrics={f"{n}/{s}/{k}": v for n, r in results.items() for s, m in r.items() for k, v in m.items()},
+            files=[out_model / "model.joblib", out_model / "metrics.json",
+                   out_docs / "heart_calibration_val.png", out_docs / "heart.md"],
+        )
     log.info("Results: %s", json.dumps(results))
     return results
 
