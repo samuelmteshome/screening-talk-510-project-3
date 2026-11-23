@@ -91,6 +91,9 @@ def predictions(p: dict, age: int) -> dict[str, dict | None]:
     for t in topics_for(p["sex"]):
         if t.has_model and eligibility(t, age, history())[0]:
             out[t.id] = prediction(url, tuple(sorted({**body, "topic": t.id}.items())))
+            if t.id == "heart" and out[t.id] and body.get("current_smoker"):
+                # Same person as a non-smoker, for the "Quit smoking" option.
+                out[t.id] = {**out[t.id], "if_quit": prediction(url, tuple(sorted({**body, "topic": t.id, "current_smoker": 0.0}.items())))}
     return out
 
 

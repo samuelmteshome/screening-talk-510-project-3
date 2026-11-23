@@ -10,6 +10,7 @@ Pure Python (no Streamlit) so it can be tested in CI.
 from __future__ import annotations
 
 import json
+import math
 import re
 from html import escape
 from pathlib import Path
@@ -66,72 +67,326 @@ def evidence_blocks(topic: Topic) -> list[dict]:
     return out
 
 
-def heart_detail(action: str, p: dict, api: dict | None) -> list[dict]:
-    """Numbers for one heart option, applied to this person's own 10-year risk."""
-    eff = ha.load_effects()[action]
-    e = eff["effects"]
-    blocks: list[dict] = []
+# ---------- Headline sentence + "See more" ----------
+# Every option opens with one plain sentence (risk change, then years of life), then a "See more" button
+# with the details and a table saying where each number came from.
+MODEL = "Our model"            # trained in this project on NHANES (src/train_heart.py, src/train.py)
+PREVENT_SRC = "PREVENT equations"
+STUDY = "Published study"
+CALC = "Our calculation"
+GOMPERTZ_B = 0.085             # yearly rise in adult death rates (about 8.5% a year): turns a lower death rate into years
+
+
+def pct(x: float) -> str:
+    """0.0283 -> '2.8%'."""
+    return f"{100 * x:.1f}%" if x < 0.1 else f"{100 * x:.0f}%"
+
+
+def rel(rr: float) -> int:
+    return round(abs(1 - rr) * 100)
+
+
+def years_from_rr(rr: float) -> float:
+    """Rule of thumb: a death rate lower by a fixed share for life is worth about ln(1/rr)/b years."""
+    return math.log(1 / rr) / GOMPERTZ_B
+
+
+def years_text(y: float) -> str:
+    if y < 0.75:
+        months = round(y * 12)
+        return f"about {months} months" if months > 1 else "about a month"
+    half = round(y * 2) / 2
+    return f"about {half:g} year" + ("" if half == 1 else "s")
+
+
+def src_link(name: str, url: str) -> str:
+    return f'<a href="{escape(url)}" target="_blank">{escape(name.split("(")[0].strip().rstrip(","))}</a>'
+
+
+def row(number: str, kind: str, how: str) -> list[str]:
+    return [escape(number), kind, how]
+
+
+def wrap(headline: str, more: list[dict], sources: list[list[str]], note: str = "") -> list[dict]:
+    out = [{"type": "headline", "html": md(headline)}]
+    if note:
+        out.append({"type": "caption", "html": md(note)})
+    more = more + [{"type": "heading", "html": "Where each number comes from"}, {"type": "sources", "rows": sources}]
+    return out + [{"type": "more", "blocks": more}]
+
+
+def heart_bases(p: dict, api: dict | None) -> tuple[float | None, float | None, list[dict], list[list[str]]]:
+    """10-year chance of a heart attack or stroke (PREVENT) and of dying of heart disease or stroke (our model)."""
     pred = (api or {}).get("prediction") or {}
     death = pred.get("risk_cv_death_10y")
-    event = None
+    event, blocks, rows = None, [], []
     if prevent.in_range(float(p["age"])):
         event, missing = prevent.from_profile(p)
         note = "Your chance of a heart attack or stroke comes from the American Heart Association's PREVENT equations."
         if missing:
             names = {"total_chol": "cholesterol", "hdl": "HDL", "sbp": "blood pressure"}
-            note += (" You skipped " + ", ".join(names[m] for m in missing) + ", so typical values were used. "
+            note += (" You skipped " + " and ".join(names[m] for m in missing) + ", so typical values were used. "
                      "Edit your answers for a closer estimate.")
         blocks.append({"type": "caption", "html": md(note)})
+        rows.append(row(f"Your 10-year chance of a heart attack or stroke: {pct(event)}", PREVENT_SRC,
+                        "Published AHA formula, run on your answers (age, sex, cholesterol, HDL, blood pressure, "
+                        "BP medicine, diabetes, smoking)."))
+    if death is not None:
+        rows.append(row(f"Your 10-year chance of dying of heart disease or stroke: {pct(death)}", MODEL,
+                        "Logistic regression trained on NHANES 1999–2008 with deaths up to 2019 (test AUC 0.78)."))
+    return event, death, blocks, rows
 
-    if action == "checkups":
-        blocks.append({"type": "text", "html": md(
-            "In 11 large trials, people offered regular general checkups **did not live longer** and were **not less "
-            "likely to die of heart disease** than people who weren't. Checkups can still catch high blood pressure "
-            "or cholesterol, which you can then treat with the medicines in this chart.")})
-    elif event is None and death is None:
-        blocks.append({"type": "text", "html": "Your own numbers will appear here once the heart model is connected."})
-    elif action == "bp":
-        current = float(p.get("sbp") or 0) or DEFAULT_SBP
-        outs = [{"outcome": ha.OUTCOME_WORDS[k], "base": b, "per5": e[k]["rr"], "certain": e[k].get("significant", True)}
-                for k, b in (("event", event), ("cv_death", death)) if k in e and b is not None]
-        blocks.append({"type": "bp", "current": current, "known": bool(float(p.get("sbp") or 0)), "outcomes": outs})
-    else:
-        for k, base in (("event", event), ("cv_death", death)):
-            if k in e and base is not None:
-                blocks.append(compare_block(base, e[k]["rr"], k, e[k].get("significant", True)))
-    if action != "checkups" and "any_death" in e:
-        a = e["any_death"]
-        blocks.append({"type": "text", "html": md(
-            f"Deaths from any cause were about **{ha.pct_change(a['rr'])}** in the studies."
-            if a.get("significant", True) else "The studies found **no clear change** in deaths from any cause.")})
-    if "major_bleeding" in e:
-        blocks.append({"type": "text", "html": md(
-            f"**Downside:** serious bleeding was about **{ha.pct_change(e['major_bleeding']['rr'])}** common "
-            "(stomach bleeding and, rarely, bleeding in the brain).")})
-    blocks.append({"type": "caption", "html": f'Source: <a href="{escape(eff["url"])}" target="_blank">'
-                   f'{escape(eff["source"])}</a>. Applies to people who have never had a heart attack or stroke. '
-                   "Numbers not yet checked against the full paper."})
+
+def effect_rows(eff: dict, e: dict, keys: dict[str, str]) -> list[list[str]]:
+    link = src_link(eff["source"], eff["url"])
+    out = []
+    for k, words in keys.items():
+        if k in e:
+            x = e[k]
+            ci = f" (95% CI {x['ci'][0]}–{x['ci'][1]})" if x.get("ci") else ""
+            out.append(row(f"{words}: {rel(x['rr'])}% {'lower' if x['rr'] < 1 else 'higher'}{ci}", STUDY, link))
+    return out
+
+
+def life_clause(any_death: dict | None) -> tuple[str, list[list[str]]]:
+    """'and may add about 1 year of life' when trials showed fewer deaths from any cause; else say it wasn't shown."""
+    if any_death and any_death.get("significant", True) and any_death["rr"] < 1:
+        y = years_from_rr(any_death["rr"])
+        return (f" and may add **{years_text(y)}** to your life",
+                [row(f"Years of life: {years_text(y)}", CALC,
+                     f"The studies' {rel(any_death['rr'])}% fewer deaths from any cause, turned into years with a "
+                     "standard rule of thumb (death rates rise about 8.5% a year with age). Assumes the effect lasts.")])
+    return (". It has **not been shown to add years** of life", [])
+
+
+def compare_more(event, death, e, base_blocks) -> list[dict]:
+    blocks = list(base_blocks)
+    for k, base in (("event", event), ("cv_death", death)):
+        if k in e and base is not None:
+            blocks.append(compare_block(base, e[k]["rr"], k, e[k].get("significant", True)))
     return blocks
 
 
-def colon_detail(p: dict) -> list[dict]:
+def bp_target(current: float) -> int:
+    return max(110, min(130, int((current - 10) // 5 * 5)))
+
+
+def heart_detail(action: str, p: dict, api: dict | None) -> list[dict]:
+    """One heart option: headline, then the details applied to this person's own 10-year risk."""
+    if action in LIFESTYLE:
+        return lifestyle_detail(action, p, api)
+    eff = ha.load_effects()[action]
+    e = eff["effects"]
+    event, death, base_blocks, rows = heart_bases(p, api)
+    caveat = {"type": "caption", "html": f"Source: {src_link(eff['source'], eff['url'])}. Applies to people who have "
+              "never had a heart attack or stroke. " + checked_note(eff)}
+    rows = rows + effect_rows(eff, e, {"event": "Heart attacks and strokes", "cv_death": "Deaths from heart disease or stroke",
+                                       "any_death": "Deaths from any cause", "major_bleeding": "Serious bleeding"})
+    base = event if event is not None else death
+    what = "a heart attack or stroke" if event is not None else "dying of heart disease or stroke"
+    k = "event" if event is not None else "cv_death"
+
+    if action == "checkups":
+        more = [{"type": "text", "html": md(
+            "In 11 large trials, people offered regular general checkups **did not live longer** and were **not less "
+            "likely to die of heart disease** than people who weren't. Checkups can still catch high blood pressure "
+            "or cholesterol, which you can then treat with the medicines in this chart.")}, caveat]
+        return wrap("Regular general checkups have **not been shown** to lower heart attacks, strokes or deaths, or to "
+                    "add years of life.", more, rows)
+    if base is None:
+        return wrap("Your own numbers will appear here once the heart model is connected.", [caveat], rows)
+
+    if action == "bp":
+        current = float(p.get("sbp") or 0) or DEFAULT_SBP
+        known = bool(float(p.get("sbp") or 0))
+        target = bp_target(current)
+        outs = [{"outcome": ha.OUTCOME_WORDS[kk], "base": b, "per5": e[kk]["rr"], "certain": e[kk].get("significant", True)}
+                for kk, b in (("event", event), ("cv_death", death)) if kk in e and b is not None]
+        more = base_blocks + [{"type": "bp", "current": current, "known": known, "outcomes": outs}]
+        any_d = e.get("any_death")
+        life, life_rows = life_clause(any_d)
+        if current - target <= 0:
+            head = (f"Your top blood pressure number ({current:.0f}) is already at a healthy level, so blood pressure "
+                    "medicine is unlikely to help you much.")
+        else:
+            rr = ha.bp_rr(e[k]["rr"], current, target)
+            head = (f"Lowering your top blood pressure number from {current:.0f} to {target} with medicine would lower "
+                    f"your chance of {what} by about **{rel(rr)}%** (from {pct(base)} to {pct(base * rr)} over 10 years)"
+                    + life + ".")
+            rows.append(row(f"With treatment: {pct(base * rr)}", CALC,
+                            f"Your chance × the studies' effect per 5 points, for a {current - target:.0f}-point drop."))
+        note = "" if known else f"You skipped your blood pressure, so {current:.0f} was used. Change it under See more."
+        return wrap(head, more + [caveat], rows + life_rows, note)
+
+    rr = e[k]["rr"]
+    life, life_rows = life_clause(e.get("any_death"))
+    name = {"statin": "Starting a statin", "aspirin": "Taking a daily low-dose aspirin"}.get(action, ha.ACTIONS[action])
+    head = (f"{name} would lower your chance of {what} by about **{rel(rr)}%** "
+            f"(from {pct(base)} to {pct(base * rr)} over 10 years)")
+    if "major_bleeding" in e:
+        head += f", but raise your chance of serious bleeding by about **{rel(e['major_bleeding']['rr'])}%**"
+    head += life + "."
+    rows.append(row(f"With it: {pct(base * rr)}", CALC, "Your chance × the studies' relative effect."))
+    more = compare_more(event, death, e, base_blocks)
+    if "major_bleeding" in e:
+        more.append({"type": "text", "html": md(
+            f"**Downside:** serious bleeding was about **{ha.pct_change(e['major_bleeding']['rr'])}** common "
+            "(stomach bleeding and, rarely, bleeding in the brain).")})
+    return wrap(head, more + [caveat], rows + life_rows)
+
+
+# ---------- Lifestyle ----------
+LIFESTYLE = ("quit_smoking", "exercise", "weight_loss")
+
+
+def lifestyle_data() -> dict:
+    return json.loads((Path(__file__).resolve().parents[1] / "evidence" / "lifestyle.json").read_text())["actions"]
+
+
+def quit_years(age: float, table: dict[str, int]) -> tuple[int, str]:
+    for band, y in table.items():
+        lo, hi = (int(x) for x in band.split("-"))
+        if lo <= age <= hi:
+            return y, band
+    if age > 64:
+        return table["55-64"], "55-64"
+    return table["25-34"], "25-34"
+
+
+def lifestyle_detail(action: str, p: dict, api: dict | None) -> list[dict]:
+    d = lifestyle_data()[action]
+    age = float(p["age"])
+    event, death, base_blocks, rows = heart_bases(p, api)
+    link = src_link(d["source"], d["url"])
+
+    if action == "quit_smoking":
+        years, band = quit_years(age, d["life_years_by_quit_age"])
+        yr_row = row(f"Years of life from quitting: about {years}", STUDY,
+                     f"{link}: people who quit at ages {band.replace('-', ' to ')} gained about {years} years"
+                     + (" (the study's oldest group; you are older)" if age > 64 else "") + ".")
+        if p.get("current_smoker") != "1":
+            head = ("You don't smoke now, so there is nothing to gain here. People who keep smoking lose about "
+                    f"**{d['smoker_life_years_lost']} years** of life, and quitting at any age wins most of that back.")
+            more = [{"type": "text", "html": md(f"People who quit at ages {band.replace('-', ' to ')} gained about "
+                                                f"**{years} years** of life compared with those who kept smoking.")},
+                    {"type": "caption", "html": f"Source: {link}. {escape(d['verified_against'])}."}]
+            return wrap(head, more, [yr_row])
+        more = list(base_blocks)
+        clauses = []
+        if event is not None:
+            after = prevent.from_profile({**p, "current_smoker": "0"})[0]
+            clauses.append(f"your chance of a heart attack or stroke by about **{rel(after / event)}%** "
+                           f"(from {pct(event)} to {pct(after)} over 10 years)")
+            more.append(pair_block(event, after, "event"))
+            rows.append(row(f"If you quit: {pct(after)}", PREVENT_SRC, "Same formula, run with smoking set to no."))
+        quit_pred = ((api or {}).get("if_quit") or {}).get("prediction") or {}
+        if death is not None and quit_pred.get("risk_cv_death_10y") is not None:
+            after_d = quit_pred["risk_cv_death_10y"]
+            more.append(pair_block(death, after_d, "cv_death"))
+            rows.append(row(f"Chance of dying of heart disease or stroke if you quit: {pct(after_d)}", MODEL,
+                            "Same model, run with smoking set to no."))
+            if not clauses:
+                clauses.append(f"your chance of dying of heart disease or stroke by about **{rel(after_d / death)}%**")
+        head = ("Quitting smoking would lower " + (clauses[0] if clauses else "your heart risk")
+                + f" and add about **{years} years** to your life.")
+        more.append({"type": "caption", "html": f"Years of life: {link}. {escape(d['verified_against'])}."})
+        return wrap(head, more, rows + [yr_row])
+
+    if action == "exercise":
+        e, ly, st = d["effects"], d["life_years"], d["strength"]
+        rr = e["cv_death"]["rr"]
+        if death is not None:
+            head = (f"Regular exercise is linked to about **{rel(rr)}%** lower chance of dying of heart disease or stroke "
+                    f"(from {pct(death)} to {pct(death * rr)} over 10 years) and up to **{ly['value']:g} more years** of life.")
+            rows.append(row(f"With exercise: {pct(death * rr)}", CALC, "Your chance from our model × the study's effect."))
+        else:
+            head = (f"Regular exercise is linked to about **{rel(rr)}%** fewer deaths from heart disease and stroke and "
+                    f"up to **{ly['value']:g} more years** of life.")
+        more = list(base_blocks)
+        if death is not None:
+            more.append(pair_block(death, death * rr, "cv_death"))
+        more += [
+            {"type": "heading", "html": "What kind, and how much"},
+            {"type": "text", "html": md(d["recommendation"])},
+            {"type": "text", "html": md(f"Doing both aerobic exercise and muscle strengthening was linked to **{st['combined_cvd_pct']}% "
+                                        f"lower** heart disease and **{st['combined_death_pct']}% fewer** deaths from any cause. "
+                                        f"Muscle strengthening alone: {st['strength_alone']}.")},
+            {"type": "text", "html": md(f"Even a little helps: up to 75 minutes a week of brisk walking was linked to about "
+                                        f"**{ly['low_dose']['value']:g} more years** of life.")},
+            {"type": "caption", "html": md("These are from studies that followed people over time, not randomized trials, "
+                                           "so they show a strong link but can't prove exercise is the only cause.")},
+        ]
+        rows += [row(f"Deaths from heart disease or stroke: {rel(rr)}% lower (95% CI {e['cv_death']['ci'][0]}–{e['cv_death']['ci'][1]})",
+                     STUDY, link + " (vigorous exercise at the guideline amount vs none)"),
+                 row(f"Years of life: up to {ly['value']:g}", STUDY, src_link(ly["source"], ly["url"]) + f" ({escape(ly['label'])})"),
+                 row(f"Aerobic + strength: {st['combined_cvd_pct']}% lower heart disease", STUDY, src_link(st["source"], st["url"]))]
+        return wrap(head, more, rows)
+
+    # weight loss
+    kg = d["example_kg"]
+    drop = -d["sbp_per_kg"]["value"] * kg
+    t = d["trial"]
+    bp = ha.load_effects()["bp"]["effects"]["event"]["rr"]
+    rr = bp ** (drop / 5)
+    lbs = round(kg * 2.2046)
+    if event is not None:
+        mid = (f", which in blood pressure trials meant about **{rel(rr)}%** fewer heart attacks and strokes "
+               f"(from {pct(event)} to {pct(event * rr)} over 10 years)")
+        rows.append(row(f"After losing {lbs} lb: {pct(event * rr)}", CALC,
+                        "Your chance × the blood pressure trials' effect for the expected drop in blood pressure."))
+    else:
+        mid = f", which in blood pressure trials meant about **{rel(rr)}%** fewer heart attacks and strokes"
+    head = (f"Losing {lbs} pounds would lower your top blood pressure number by about **{drop:.0f} points**{mid}. "
+            "A large weight-loss trial did not show fewer heart attacks or strokes, and weight loss has **not been shown "
+            "to add years** of life.")
+    more = list(base_blocks)
+    if event is not None:
+        more.append(pair_block(event, event * rr, "event"))
+    more += [{"type": "text", "html": md(
+        f"In the Look AHEAD trial, adults with type 2 diabetes who lost about {t['weight_loss_pct_1y']['intervention']:g}% "
+        f"of their weight had about the same rate of heart attacks and strokes as those who didn't "
+        f"({t['events_per_100_person_years']['intervention']:g} vs {t['events_per_100_person_years']['control']:g} "
+        "per 100 people per year). Weight loss still lowers blood pressure, blood sugar and joint pain.")}]
+    rows += [row(f"Blood pressure: about {-d['sbp_per_kg']['value']:g} points lower per kg (2.2 lb) lost", STUDY, link),
+             row(f"Heart attacks and strokes per 5 points lower: {rel(bp)}% fewer", STUDY,
+                 src_link(ha.load_effects()["bp"]["source"], ha.load_effects()["bp"]["url"])),
+             row("No clear change in heart attacks or strokes", STUDY, src_link(t["source"], t["url"]))]
+    return wrap(head, more, rows)
+
+
+def pair_block(base: float, after: float, outcome: str) -> dict:
+    """Without/with bars for two absolute risks (no trial ratio involved)."""
+    return compare_block(base, after / base if base else 1.0, outcome)
+
+
+def colon_detail(p: dict, topic: Topic) -> list[dict]:
     d = colon_risk.data()
     eff = d["colonoscopy"]["if_screened"]
-    blocks = [compare_block(colon_risk.risk(p, "incidence"), eff["crc"]["rr"], "crc"),
-              compare_block(colon_risk.risk(p, "mortality"), eff["crc_death"]["rr"], "crc_death"),
-              {"type": "text", "html": md("The trial found **no clear change** in deaths from any cause.")}]
+    inc, mort = colon_risk.risk(p, "incidence"), colon_risk.risk(p, "mortality")
+    more = [compare_block(inc, eff["crc"]["rr"], "crc"),
+            compare_block(mort, eff["crc_death"]["rr"], "crc_death"),
+            {"type": "text", "html": md("The trial found **no clear change** in deaths from any cause.")}]
     names = {k: v["label"] for k, v in d["risk_factors"].items()}
     raised = [names[k] for k in colon_risk.factors(p)]
     who = f"a {int(float(p['age']))}-year-old {'man' if p['sex'] == 'male' else 'woman'}"
-    blocks.append({"type": "caption", "html": escape(
+    more.append({"type": "caption", "html": escape(
         f"Your starting chance is the US average for {who}" + (f", raised because you said: {'; '.join(raised)}."
                                                               if raised else ".")
         + " Colonoscopy numbers are for people who actually had one in the NordICC trial (ages 55 to 64, 10 years). "
         "Among everyone invited, only 42% went, so the benefit for the whole invited group was smaller.")})
     srcs = [d["baseline"], *d["risk_factors"].values(), d["colonoscopy"]]
-    blocks.append({"type": "caption", "html": "Sources: " + "; ".join(
-        f'<a href="{escape(s["url"])}" target="_blank">{escape(s["source"].split("(")[0].strip())}</a>' for s in srcs)})
-    return blocks
+    rows = [row(f"Your 10-year chance of getting colorectal cancer: {pct(inc)}", CALC,
+                f"US cancer registry rates for your age and sex ({src_link(d['baseline']['source'], d['baseline']['url'])})"
+                + (", raised by published relative risks for: " + "; ".join(escape(r) for r in raised) if raised else "") + "."),
+            row(f"Colorectal cancer: {rel(eff['crc']['rr'])}% lower; deaths from it: {rel(eff['crc_death']['rr'])}% lower",
+                STUDY, src_link(d["colonoscopy"]["source"], d["colonoscopy"]["url"])),
+            row(f"With colonoscopy: {pct(inc * eff['crc']['rr'])}", CALC, "Your chance × the trial's effect.")]
+    head = (f"Getting a colonoscopy would lower your chance of getting colorectal cancer by about **{rel(eff['crc']['rr'])}%** "
+            f"(from {pct(inc)} to {pct(inc * eff['crc']['rr'])} over 10 years) and of dying from it by about "
+            f"**{rel(eff['crc_death']['rr'])}%**. The trial did **not show it adds years** of life overall.")
+    more += [{"type": "caption", "html": "Sources: " + "; ".join(src_link(s["source"], s["url"]) for s in srcs)},
+             {"type": "heading", "html": "What the trial found"}, *evidence_blocks(topic)]
+    return wrap(head, more, rows)
 
 
 def prediction_blocks(topic: Topic, api: dict | None) -> list[dict]:
@@ -145,11 +400,34 @@ def prediction_blocks(topic: Topic, api: dict | None) -> list[dict]:
     return out
 
 
+def psa_detail(topic: Topic, api: dict | None) -> list[dict]:
+    ev = {str(e["_file"]): e for e in load_evidence(topic)}
+    erspc = next(e for f, e in ev.items() if "erspc_2025" in f)
+    life = next(e for f, e in ev.items() if "heijnsdijk" in f)
+    red = erspc["numbers"]["relative_reduction_pct"]["value"]
+    ly = life["numbers"]["life_years_gained_per_1000"]["value"]
+    weeks = round(ly / 1000 * 52)
+    head = (f"Getting regular PSA tests would lower your chance of dying of prostate cancer by about **{red}%** and add "
+            f"about **{weeks} weeks** of life on average ({ly} years of life per 1,000 men screened). The downside: for each "
+            f"death prevented, about {erspc['numbers']['number_needed_to_diagnose']['value']} more men are diagnosed with "
+            "prostate cancer, and some of those cancers would never have harmed them.")
+    pred = (api or {}).get("prediction")
+    rows = [row(f"Prostate cancer deaths: {red}% lower", STUDY, src_link(erspc["source"], erspc["url"])),
+            row(f"Years of life: {ly} per 1,000 men", STUDY, src_link(life["source"], life["url"]) + " (a model fitted to the trial)")]
+    if pred:
+        rows.insert(0, row(f"Your chance of a PSA of 4.0 or higher: about {pred['per_100']} in 100", MODEL,
+                           "Logistic regression trained on NHANES 2001–2008 (test AUC 0.66, no better than age alone)."))
+    more = prediction_blocks(topic, api) + [{"type": "heading", "html": "What the research found"}] + evidence_blocks(topic)
+    return wrap(head, more, rows)
+
+
 def option_detail(topic: Topic, option: flowchart.Option, p: dict, api: dict | None) -> list[dict]:
     if topic.id == "heart":
         return heart_detail(option.id, p, api)
     if topic.id == "colorectal" and colon_risk.in_range(float(p["age"])):
-        return colon_detail(p) + [{"type": "heading", "html": "What the trial found"}] + evidence_blocks(topic)
+        return colon_detail(p, topic)
+    if topic.id == "prostate":
+        return psa_detail(topic, api)
     blocks = prediction_blocks(topic, api) if topic.has_model else []
     return blocks + [{"type": "heading", "html": "What the research found"}] + evidence_blocks(topic)
 

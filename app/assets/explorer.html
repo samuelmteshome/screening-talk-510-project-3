@@ -45,6 +45,23 @@ body { margin:0; font-family:"Source Sans Pro", -apple-system, "Segoe UI", sans-
 .bars .fill { position:absolute; left:0; top:0; bottom:0; border-radius:6px; width:0; transition: width .6s ease-out; }
 .bars .val { position:absolute; top:2px; font-size:14px; font-weight:700; }
 .bars .title { font-size:14px; color:var(--muted); margin:10px 0 2px; }
+.headline { font-size:21px; line-height:1.45; margin:4px 0 12px; }
+.headline b { color:var(--accent, #0f766e); }
+details.more { margin-top:12px; border-top:1px solid #e2e8f0; padding-top:12px; }
+details.more summary { list-style:none; cursor:pointer; display:inline-block; font-weight:700; font-size:16px; padding:10px 18px;
+  border-radius:999px; border:2px solid var(--accent, #0f766e); color:var(--accent, #0f766e); user-select:none; }
+details.more summary::-webkit-details-marker { display:none; }
+details.more summary:hover { background:var(--soft); }
+details.more .close, details.more[open] .open { display:none; }
+details.more[open] .close { display:inline; }
+.more-body { margin-top:10px; }
+table.srcs { border-collapse:collapse; width:100%; font-size:14px; margin:6px 0 4px; }
+table.srcs th { text-align:left; color:var(--muted); font-weight:600; padding:4px 8px 4px 0; border-bottom:1px solid #e2e8f0; }
+table.srcs td { padding:7px 8px 7px 0; border-bottom:1px solid #f1f5f9; vertical-align:top; line-height:1.4; }
+table.srcs td:first-child { width:42%; }
+.tag { display:inline-block; font-size:12px; font-weight:700; padding:1px 8px; border-radius:999px; margin-right:4px; white-space:nowrap; }
+.t-model { background:#dcfce7; color:#166534; } .t-prevent { background:#e0e7ff; color:#3730a3; }
+.t-study { background:#fef3c7; color:#92400e; } .t-calc { background:#f1f5f9; color:#334155; }
 .stat { font-size:34px; font-weight:700; margin:4px 0 0; }
 .stat + .cap { margin-top:0; }
 .bp { display:flex; gap:18px; flex-wrap:wrap; margin:6px 0 10px; font-size:15px; }
@@ -70,6 +87,9 @@ table.nums td { padding:3px 14px 3px 0; border-bottom:1px solid #f1f5f9; }
   .bars .row { grid-template-columns:78px 1fr; font-size:14px; }
   .bp { gap:10px; } .bp input, .bp select { width:100px; }
   table.nums { font-size:14px; }
+  .headline { font-size:18px; }
+  table.srcs, table.srcs tbody, table.srcs tr, table.srcs td { display:block; width:100% !important; }
+  table.srcs th { display:none; } table.srcs td:first-child { font-weight:600; padding-bottom:0; border-bottom:0; }
 }
 @media (prefers-reduced-motion: reduce) { .new, #wires path.new { animation:none; } .bars .fill { transition:none; } }
 </style>
@@ -212,9 +232,18 @@ function blocksHtml(blocks, color) {
       case "heading": return `<h3>${b.html}</h3>`;
       case "source": return `<p><b>${b.html}</b>${b.caption ? `<br><span class="cap">${esc(b.caption)}</span>` : ""}</p>`;
       case "caption": return `<p class="cap">${b.html}</p>`;
+      case "headline": return `<p class="headline">${b.html}</p>`;
+      case "more": return `<details class="more"><summary><span class="open">See more info</span><span class="close">Hide details</span></summary>` +
+        `<div class="more-body">${blocksHtml(b.blocks, color)}</div></details>`;
+      case "sources": return `<table class="srcs"><tr><th>Number</th><th>Where it comes from</th></tr>` +
+        b.rows.map((r) => `<tr><td>${r[0]}</td><td><span class="tag ${tagClass(r[1])}">${esc(r[1])}</span> ${r[2]}</td></tr>`).join("") + `</table>`;
       default: return `<p>${b.html}</p>`;
     }
   }).join("");
+}
+
+function tagClass(kind) {
+  return { "Our model": "t-model", "PREVENT equations": "t-prevent", "Published study": "t-study", "Our calculation": "t-calc" }[kind] || "";
 }
 
 function grow() {
@@ -231,6 +260,7 @@ function detail() {
       `<p class="cap">Averages from research studies, not a promise for one person. Use this to start a conversation with your doctor.</p></div>`;
   } else { d.innerHTML = ""; return; }
   grow();
+  d.querySelectorAll("details.more").forEach((el) => el.addEventListener("toggle", () => { if (el.open) { el.querySelectorAll(".fill").forEach((f) => (f.style.width = "0")); grow(); } }));
   setTimeout(() => d.firstChild && d.firstChild.scrollIntoView({ behavior: "smooth", block: "nearest" }), 80);
 }
 
