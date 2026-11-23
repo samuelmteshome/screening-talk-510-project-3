@@ -305,6 +305,15 @@ q.addEventListener("keydown", (e) => {
 });
 window.addEventListener("resize", () => requestAnimationFrame(wires));
 
+// Open at the top of the page: Streamlit keeps the scroll position of the previous screen (the review).
+(function toTop() {
+  try {
+    const doc = window.parent.document;
+    doc.querySelectorAll('[data-testid="stMain"], [data-testid="stAppViewContainer"], section.main').forEach((el) => el.scrollTo(0, 0));
+    window.parent.scrollTo(0, 0);
+  } catch (e) { /* not same-origin: nothing to do */ }
+})();
+
 const st = DATA.start || {};
 set(st.organ || null, st.branch || null, st.option || null);
 
