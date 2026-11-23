@@ -43,6 +43,10 @@ OPTIONS: tuple[Option, ...] = (
            ("psa", "prostate exam", "prostate specific antigen", "prostate cancer screening")),
     Option("colonoscopy", "colorectal", "screening", "Colonoscopy",
            ("colonoscopy", "colon cancer screening", "bowel screening", "colorectal screening")),
+    Option("fobt", "colorectal", "screening", "Stool test (FOBT / FIT)",
+           ("fobt", "fit", "stool test", "fecal occult blood", "hemoccult", "cologuard", "poop test")),
+    Option("sigmoidoscopy", "colorectal", "screening", "Sigmoidoscopy",
+           ("sigmoidoscopy", "flex sig", "flexible sigmoidoscopy")),
 )
 
 

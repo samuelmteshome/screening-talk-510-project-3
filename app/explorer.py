@@ -389,6 +389,57 @@ def colon_detail(p: dict, topic: Topic) -> list[dict]:
     return wrap(head, more, rows)
 
 
+def colon_test_detail(p: dict, test: str) -> list[dict]:
+    """Stool test (FOBT) or sigmoidoscopy: the trials' effect for people invited, on this person's own chance."""
+    d = colon_risk.data()
+    t = d[test]
+    eff = t["if_invited"]
+    link = src_link(t["source"], t["url"])
+    in_range = colon_risk.in_range(float(p["age"]))
+    inc = colon_risk.risk(p, "incidence") if in_range else None
+    mort = colon_risk.risk(p, "mortality") if in_range else None
+    name = {"fobt": f"Doing a stool test {t['how_often']}", "sigmoidoscopy": "Getting a sigmoidoscopy"}[test]
+    parts, rows, more = [], [], []
+    if mort is not None:
+        rows.append(row(f"Your 10-year chance of dying of colorectal cancer: {pct(mort)}", CALC,
+                        f"US cancer registry rates for your age and sex ({src_link(d['baseline']['source'], d['baseline']['url'])})."))
+    if "crc" in eff:
+        r = eff["crc"]["rr"]
+        parts.append(f"your chance of getting colorectal cancer by about **{rel(r)}%**"
+                     + (f" (from {pct(inc)} to {pct(inc * r)} over 10 years)" if inc is not None else ""))
+        if inc is not None:
+            more.append(compare_block(inc, r, "crc"))
+            rows.insert(0, row(f"Your 10-year chance of getting colorectal cancer: {pct(inc)}", CALC, "Same registry rates."))
+        rows.append(row(f"Colorectal cancer: {rel(r)}% lower (95% CI {eff['crc']['ci'][0]}–{eff['crc']['ci'][1]})", STUDY, link))
+    r = eff["crc_death"]["rr"]
+    parts.append(f"your chance of dying of {'it' if 'crc' in eff else 'colorectal cancer'} by about **{rel(r)}%**"
+                 + (f" (from {pct(mort)} to {pct(mort * r)} over 10 years)" if mort is not None and "crc" not in eff else ""))
+    if mort is not None:
+        more.append(compare_block(mort, r, "crc_death"))
+        rows.append(row(f"With the test: {pct(mort * r)} chance of dying of it", CALC, "Your chance × the trial's effect."))
+    rows.append(row(f"Deaths from colorectal cancer: {rel(r)}% lower (95% CI {eff['crc_death']['ci'][0]}–{eff['crc_death']['ci'][1]})",
+                    STUDY, link))
+    head = f"{name} would lower " + " and ".join(parts) + ". It has **not been shown to add years** of life overall."
+    if test == "fobt":
+        a = t["all_cause"]
+        more += [{"type": "text", "html": md(f"Deaths from any cause were **unchanged** in the trial (relative risk {a['rr']:.2f}). "
+                                             f"Testing every other year instead of every year gave a smaller benefit "
+                                             f"({rel(t['biennial_crc_death']['rr'])}% fewer colorectal cancer deaths).")},
+                 {"type": "text", "html": md(t["fit_note"])},
+                 {"type": "caption", "html": md("A positive stool test is followed by a colonoscopy. The trial followed people "
+                                                "for 30 years; here its effect is applied to your next 10.")}]
+    else:
+        more += [{"type": "text", "html": md("Sigmoidoscopy looks at the lower third of the colon with a short scope, usually "
+                                             "without sedation. Anything suspicious is followed by a full colonoscopy.")},
+                 {"type": "caption", "html": md(f"Numbers are for everyone invited to screening ({t['attendance']}), followed "
+                                                "for 15 years; the benefit for people who actually went is larger.")}]
+    if not in_range:
+        more.insert(0, {"type": "caption", "html": md("Your own starting chance isn't shown because the registry rates we use "
+                                                      "cover ages 45 to 75.")})
+    more.append({"type": "caption", "html": f"Source: {link}. {checked_note(t)}"})
+    return wrap(head, more, rows)
+
+
 def prediction_blocks(topic: Topic, api: dict | None) -> list[dict]:
     pred = (api or {}).get("prediction")
     if not pred:
@@ -424,6 +475,8 @@ def psa_detail(topic: Topic, api: dict | None) -> list[dict]:
 def option_detail(topic: Topic, option: flowchart.Option, p: dict, api: dict | None) -> list[dict]:
     if topic.id == "heart":
         return heart_detail(option.id, p, api)
+    if topic.id == "colorectal" and option.id in ("fobt", "sigmoidoscopy"):
+        return colon_test_detail(p, option.id)
     if topic.id == "colorectal" and colon_risk.in_range(float(p["age"])):
         return colon_detail(p, topic)
     if topic.id == "prostate":

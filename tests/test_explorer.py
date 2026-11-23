@@ -102,3 +102,11 @@ def test_lifestyle_branch_for_smokers_and_non_smokers():
     assert "You don&#x27;t smoke now" in never["quit_smoking"]["detail"][0]["html"]
     assert "150 to 300 minutes a week of vigorous" in str(smoker["exercise"]["detail"])
     assert "Losing 10 pounds would lower your top blood pressure number by about <b>5 points</b>" in smoker["weight_loss"]["detail"][0]["html"]
+
+
+def test_stool_test_and_sigmoidoscopy_use_their_own_trials():
+    colon = options(explorer.payload(MAN, set(), {}), "colorectal")
+    assert list(colon) == ["colonoscopy", "fobt", "sigmoidoscopy"]
+    assert "dying of colorectal cancer by about <b>32%</b>" in colon["fobt"]["detail"][0]["html"]
+    sig = colon["sigmoidoscopy"]["detail"][0]["html"]
+    assert "getting colorectal cancer by about <b>21%</b>" in sig and "dying of it by about <b>20%</b>" in sig
