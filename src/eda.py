@@ -125,7 +125,7 @@ def run(topic: str, clean_path: Path, out_dir: Path) -> Path:
 
     by_cycle = rate_by(df.assign(cycle_=df["cycle"]), "cycle_")
     md += ["| Cycle | People | Events | Per 1,000 |", "| --- | --- | --- | --- |"]
-    md += [f"| {c} | {r.n:,} | {r.events:,} | {r.per_1000:g} |" for c, r in by_cycle.iterrows()]
+    md += [f"| {c} | {int(r.n):,} | {int(r.events):,} | {r.per_1000:g} |" for c, r in by_cycle.iterrows()]
     md.append("")
 
     miss = (df[features].isna().mean() * 100).round(1).sort_values(ascending=False)
