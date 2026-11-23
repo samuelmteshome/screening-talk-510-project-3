@@ -135,3 +135,15 @@ def test_prevent_equations_behave():
     import pytest
     with pytest.raises(ValueError):
         prevent.risk("male", 82)
+
+
+def test_colon_risk_personal():
+    import colon_risk
+    base = {"sex": "male", "age": 55, "bmi": 25}
+    r = colon_risk.risk(base)
+    assert 0.005 < r < 0.02                                   # about 1 in 100 over 10 years
+    assert colon_risk.risk({**base, "age": 70}) > r
+    assert colon_risk.risk({**base, "sex": "female"}) < r
+    assert colon_risk.risk({**base, "family_crc": 1}) > r * 1.8
+    assert colon_risk.factors({**base, "bmi": 32, "ever_smoked": 1}) == {"ever_smoked": 1.18, "obese": 1.334}
+    assert colon_risk.risk(base, "mortality") < r

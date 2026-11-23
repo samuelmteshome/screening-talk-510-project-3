@@ -21,6 +21,8 @@ ACTIONS = {
 OUTCOME_WORDS = {
     "event": "have a heart attack or stroke",
     "cv_death": "die of heart disease or stroke",
+    "crc": "get colorectal cancer",
+    "crc_death": "die of colorectal cancer",
 }
 
 
