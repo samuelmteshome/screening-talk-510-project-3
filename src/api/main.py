@@ -67,8 +67,35 @@ class LoadedModel:
     extra: dict[str, Any] = field(default_factory=dict)
 
     def predict(self, row: dict[str, Any]) -> float:
-        X = pd.DataFrame([{f: row.get(f, np.nan) for f in self.features}])
+        row = {f: row.get(f, np.nan) for f in self.features}
+        for f, typical in typical_values(self.pipeline).items():
+            if f in row and (row[f] is None or (isinstance(row[f], float) and np.isnan(row[f]))):
+                row[f] = typical
+        X = pd.DataFrame([row])
         return float(self.pipeline.predict_proba(X)[:, 1][0])
+
+
+def typical_values(pipeline: Any) -> dict[str, Any]:
+    """Training medians for numeric features whose imputer also adds a "was missing" flag.
+
+    In NHANES a missing exam value marks people who are often sicker, so the flag carries risk.
+    Someone who skips a question in the app is not that person: give them the typical value
+    with the flag off instead of letting the imputer raise their risk.
+    """
+    from sklearn.compose import ColumnTransformer
+    from sklearn.impute import SimpleImputer
+
+    out: dict[str, Any] = {}
+    steps = getattr(pipeline, "named_steps", {}) or {}
+    for step in steps.values():
+        if not isinstance(step, ColumnTransformer):
+            continue
+        for _, trans, cols in step.transformers_:
+            imputers = [trans] if isinstance(trans, SimpleImputer) else list(getattr(trans, "named_steps", {}).values())
+            for imp in imputers:
+                if isinstance(imp, SimpleImputer) and imp.add_indicator and hasattr(imp, "statistics_"):
+                    out.update(dict(zip(cols, imp.statistics_)))
+    return out
 
 
 def model_source(topic: str) -> str | None:

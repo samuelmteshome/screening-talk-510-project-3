@@ -113,3 +113,19 @@ def test_saved_heart_dict_and_bare_pipeline_both_load(tmp_path, monkeypatch):
     assert m.features == feats and 0 < m.predict({"age": 60, "race_eth": "non_hispanic_white", "bmi": 27}) < 1
     monkeypatch.setenv("MODEL_URI_PROSTATE", str(tmp_path / "h.joblib"))
     assert main.load_model("prostate", load_topic("prostate"), cfg).version == "v9"
+
+
+def test_skipped_answer_gets_the_typical_value_not_the_missing_flag():
+    """In training, a missing BMI marks sicker people; a skipped app question must not raise the risk."""
+    rng = np.random.default_rng(1)
+    n = 600
+    X = pd.DataFrame({"age": rng.normal(60, 8, n), "bmi": rng.normal(28, 4, n)})
+    miss = rng.random(n) < 0.15
+    X.loc[miss, "bmi"] = np.nan
+    y = (rng.random(n) < np.where(miss, 0.6, 0.05)).astype(int)
+    pre = ColumnTransformer([("num", SimpleImputer(strategy="median", add_indicator=True), ["age", "bmi"])])
+    pipe = Pipeline([("pre", pre), ("lr", LogisticRegression(max_iter=2000))]).fit(X, y)
+    m = main.LoadedModel(pipe, ["age", "bmi"], "test")
+    median = float(np.nanmedian(X["bmi"]))
+    assert m.predict({"age": 60, "bmi": np.nan}) == pytest.approx(m.predict({"age": 60, "bmi": median}))
+    assert main.typical_values(pipe) == pytest.approx({"age": float(np.nanmedian(X["age"])), "bmi": median})
