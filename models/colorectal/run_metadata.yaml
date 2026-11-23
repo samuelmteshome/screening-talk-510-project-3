@@ -1,0 +1,198 @@
+run_id: b0x5z7sr
+created_at: '2026-11-23T14:33:19+00:00'
+topic: colorectal
+final: true
+git:
+  commit: 0747b8031a482851beffed5c4d53bba88b9f7c97
+  dirty: true
+docker_image: null
+python: 3.11.18
+platform: Linux-7.0.0-1020-azure-x86_64-with-glibc2.43
+packages:
+  numpy: 2.4.6
+  pandas: 3.1.1
+  pyarrow: 26.0.1
+  scikit-learn: 1.9.1
+  joblib: 1.6.0
+  wandb: 0.31.2
+seed: 510
+data:
+  uri: data/clean/colorectal/clean.parquet
+  sha256: e45353e4b0e7f720cc2ecde9964de9e383ee7857536fb4a43c41d4306e71166f
+  rows: 27284
+  verified: false
+config:
+  seed: 510
+  storage:
+    bucket: <bucket>
+  data:
+    nhanes_base_url: https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/{start_year}/DataFiles/{file}.xpt
+    raw_dir: data/raw
+    clean_dir: data/clean
+    cache_dir: data/cache
+    raw_snapshot_uri: gs://<bucket>/raw/{date}/{topic}/{cycle}/{file}.xpt
+  tracking:
+    project: screening-talk
+    entity: <team>
+  serve:
+    topics:
+    - prostate
+    - heart
+    - colorectal
+topic_config:
+  topic: colorectal
+  model: logistic_regression
+  data:
+    cycles:
+    - 1999-2000
+    - 2001-2002
+    - 2003-2004
+    - 2005-2006
+    - 2007-2008
+    - 2009-2010
+    - 2011-2012
+    - 2013-2014
+    - 2015-2016
+    - 2017-2018
+    files:
+      1999-2000:
+      - DEMO
+      - BMX
+      - SMQ
+      - DIQ
+      - MCQ
+      2001-2002:
+      - DEMO_B
+      - BMX_B
+      - SMQ_B
+      - DIQ_B
+      - MCQ_B
+      2003-2004:
+      - DEMO_C
+      - BMX_C
+      - SMQ_C
+      - DIQ_C
+      - MCQ_C
+      2005-2006:
+      - DEMO_D
+      - BMX_D
+      - SMQ_D
+      - DIQ_D
+      - MCQ_D
+      2007-2008:
+      - DEMO_E
+      - BMX_E
+      - SMQ_E
+      - DIQ_E
+      - MCQ_E
+      2009-2010:
+      - DEMO_F
+      - BMX_F
+      - SMQ_F
+      - DIQ_F
+      - MCQ_F
+      2011-2012:
+      - DEMO_G
+      - BMX_G
+      - SMQ_G
+      - DIQ_G
+      - MCQ_G
+      2013-2014:
+      - DEMO_H
+      - BMX_H
+      - SMQ_H
+      - DIQ_H
+      - MCQ_H
+      2015-2016:
+      - DEMO_I
+      - BMX_I
+      - SMQ_I
+      - DIQ_I
+      - MCQ_I
+      2017-2018:
+      - DEMO_J
+      - BMX_J
+      - SMQ_J
+      - DIQ_J
+      - MCQ_J
+    age_min: 45
+    age_max: 79
+    cancer_type_codes:
+      colon: 16
+      rectum: 31
+    target: ever_crc
+    version: v1
+    clean_uri: gs://<bucket>/clean/colorectal/v1/clean.parquet
+    clean_sha256: <hash>
+  split:
+    train_cycles:
+    - 1999-2000
+    - 2001-2002
+    - 2003-2004
+    - 2005-2006
+    - 2007-2008
+    - 2009-2010
+    val_cycles:
+    - 2011-2012
+    - 2013-2014
+    test_cycles:
+    - 2015-2016
+    - 2017-2018
+  features:
+  - age
+  - sex
+  - bmi
+  - ever_smoked
+  - diabetes
+  feature_types:
+    age: spline
+    sex: categorical
+    bmi: numeric
+    ever_smoked: numeric
+    diabetes: numeric
+  eda_features:
+  - age
+  - sex
+  - race_eth
+  - bmi
+  - ever_smoked
+  - current_smoker
+  - diabetes
+  feature_sources:
+    age:
+      all: RIDAGEYR
+    sex:
+      all: RIAGENDR
+    race_eth:
+      all: RIDRETH1
+    exam_weight:
+      all: WTMEC2YR
+    bmi:
+      all: BMXBMI
+    smoked_100:
+      all: SMQ020
+    smoke_now:
+      all: SMQ040
+    diabetes_told:
+      all: DIQ010
+    ever_cancer:
+      all: MCQ220
+    cancer_1:
+      all: MCQ230A
+    cancer_2:
+      all: MCQ230B
+    cancer_3:
+      all: MCQ230C
+  model_params:
+    C_grid:
+    - 0.01
+    - 0.1
+    - 1.0
+    - 10.0
+    age_spline_knots: 3
+    use_survey_weights: false
+  serve:
+    model_uri: gs://<bucket>/models/<run_id>/model.joblib
+    display_age_min: 45
+    display_age_max: 75
+    evidence_file: evidence/colorectal_risk.json
