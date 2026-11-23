@@ -1,10 +1,62 @@
-# Expected NHANES columns per topic. clean.py checks each raw file against this
-# and fails loudly on a missing or renamed column. Fill in per cycle (Alberto).
-# NHANES renames some variables between cycles (e.g. KIQ190 -> KIQ191).
+# Expected columns and values per topic, using the column names from
+# feature_sources in topics/<topic>.yaml. NHANES renames some variables
+# between cycles (e.g. KIQ190 -> KIQ191); feature_sources maps each cycle to
+# the right variable, and clean.py stops with a clear error if a variable is
+# missing in any cycle or a value breaks these rules.
 prostate:
-  required: [SEQN, RIAGENDR, RIDAGEYR, RIDRETH1, BMXBMI, LBXP1]
-  renamed:
-    KIQ190: {"2001-2002": KIQ190, "2009-2010": KIQ191}   # <verify> each cycle
+  SEQN: {min: 1}
+  sex: {allowed: [1, 2]}                       # RIAGENDR: 1 male, 2 female
+  age: {min: 0, max: 85}                       # RIDAGEYR is top-coded at 85 or 80
+  race_eth: {allowed: [1, 2, 3, 4, 5]}         # RIDRETH1
+  bmi: {min: 5, max: 200, nullable: true}       # real NHANES values go from 7.99 (2001-02) to 130.21 (2005-06)
+  exam_weight: {min: 0}
+  psa: {min: 0, nullable: true}                # missing for women, men under 40, ineligible men
+  prostate_inflammation: {allowed: [1, 2, 7, 9], nullable: true}
+  rectal_exam_7d: {allowed: [1, 2, 7, 9], nullable: true}
+  biopsy_4wk: {allowed: [1, 2, 7, 9], nullable: true}
+  cystoscopy_4wk: {allowed: [1, 2, 7, 9], nullable: true}
+  prior_prostate_cancer: {allowed: [1, 2, 7, 9], nullable: true}
+
 heart:
-  required: [SEQN, RIAGENDR, RIDAGEYR, RIDRETH1, LBXTC, LBDHDL, BPXSY1, ELIGSTAT, MORTSTAT, UCOD_LEADING, PERMTH_EXM]
-  renamed: {}   # <verify> HDL name differs by cycle (LBDHDL / LBXHDD / LBDHDD)
+  SEQN: {min: 1}
+  sex: {allowed: [1, 2]}
+  age: {min: 0, max: 85}
+  race_eth: {allowed: [1, 2, 3, 4, 5]}
+  exam_weight: {min: 0}
+  bmi: {min: 5, max: 200, nullable: true}
+  total_chol: {min: 40, max: 1000, nullable: true}   # mg/dL
+  hdl: {min: 5, max: 300, nullable: true}            # mg/dL
+  sbp_1: {min: 50, max: 300, nullable: true}         # mmHg
+  sbp_2: {min: 50, max: 300, nullable: true}
+  sbp_3: {min: 50, max: 300, nullable: true}
+  told_high_bp: {allowed: [1, 2, 7, 9], nullable: true}
+  bp_meds_now: {allowed: [1, 2, 7, 9], nullable: true}       # asked only if told_high_bp == 1
+  diabetes_told: {allowed: [1, 2, 3, 7, 9], nullable: true}  # 3 = borderline
+  smoked_100: {allowed: [1, 2, 7, 9], nullable: true}
+  smoke_now: {allowed: [1, 2, 3, 7, 9], nullable: true}      # 1 every day, 2 some days, 3 not at all
+  chf: {allowed: [1, 2, 7, 9], nullable: true}
+  chd: {allowed: [1, 2, 7, 9], nullable: true}
+  angina: {allowed: [1, 2, 7, 9], nullable: true}
+  heart_attack: {allowed: [1, 2, 7, 9], nullable: true}
+  stroke: {allowed: [1, 2, 7, 9], nullable: true}
+  eligstat: {allowed: [1, 2, 3], nullable: true}             # 1 eligible for linkage; missing = not in mortality file
+  mortstat: {allowed: [0, 1], nullable: true}
+  ucod_leading: {allowed: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nullable: true}
+  permth_exm: {min: 0, max: 300, nullable: true}
+
+colorectal:
+  SEQN: {min: 1}
+  sex: {allowed: [1, 2]}
+  age: {min: 0, max: 85}
+  race_eth: {allowed: [1, 2, 3, 4, 5]}
+  exam_weight: {min: 0, nullable: true}       # 0 = interview only
+  bmi: {min: 5, max: 200, nullable: true}
+  smoked_100: {allowed: [1, 2, 7, 9], nullable: true}
+  smoke_now: {allowed: [1, 2, 3, 7, 9], nullable: true}
+  diabetes_told: {allowed: [1, 2, 3, 7, 9], nullable: true}
+  ever_cancer: {allowed: [1, 2, 7, 9], nullable: true}
+  # Cancer type codes run 10-39, plus 66/77/99. One 2005-2006 record has an undocumented 9;
+  # it is not colon (16) or rectum (31), so it counts as another cancer.
+  cancer_1: {min: 9, max: 99, nullable: true}
+  cancer_2: {min: 10, max: 99, nullable: true}
+  cancer_3: {min: 10, max: 99, nullable: true}

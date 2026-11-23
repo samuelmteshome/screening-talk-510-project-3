@@ -1,30 +1,36 @@
 {
-  "source": "Roobol et al., European Study of Prostate Cancer Screening - 23-Year Follow-up, NEJM 2025",
+  "source": "Roobol et al., European Study of Prostate Cancer Screening - 23-Year Follow-up, NEJM 2025;393(17):1669-1680",
   "url": "https://www.nejm.org/doi/full/10.1056/NEJMoa2503223",
-  "comparison": "Invitation to PSA screening vs no invitation",
+  "comparison": "Invitation to PSA screening vs no invitation, men 55-69",
   "horizon_years": 23,
   "denominator": 1000,
   "numbers": {
     "pc_deaths_screening_group": {
       "value": null,
-      "ref": "TODO table"
+      "ref": "not in the abstract; needs the full paper"
     },
     "pc_deaths_comparison_group": {
       "value": null,
-      "ref": "TODO table"
+      "ref": "not in the abstract; needs the full paper"
+    },
+    "deaths_avoided_per_1000": {
+      "value": 2.2,
+      "ref": "abstract: absolute risk reduction 0.22% (95% CI 0.10-0.34)"
     },
     "relative_reduction_pct": {
       "value": 13,
-      "ref": "press release; confirm in paper"
+      "ref": "abstract: rate ratio 0.87 (95% CI 0.80-0.95)"
     },
     "number_needed_to_invite": {
       "value": 456,
-      "ref": "press release; confirm"
+      "ref": "abstract: 456 (95% CI 306-943)"
     },
     "number_needed_to_diagnose": {
       "value": 12,
-      "ref": "press release; confirm"
+      "ref": "ERSPC press release (ecancer, 30 Oct 2025); 18 in earlier analyses"
     }
   },
-  "verified_by": null
+  "verified_by": "alberto",
+  "verified_on": "2026-11-22",
+  "verified_against": "PubMed abstract (PMID 41160819) and the ERSPC press release"
 }

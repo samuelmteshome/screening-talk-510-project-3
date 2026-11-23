@@ -1,0 +1,70 @@
+name: deploy API to Cloud Run
+# Run by hand (Actions tab -> "deploy API to Cloud Run" -> Run workflow).
+# 1. Downloads and cleans the public NHANES data, trains each model that has a trainer.
+# 2. Builds the Docker image with the trained models inside, pushes it to Artifact Registry.
+# 3. Deploys to Cloud Run and smoke-tests the live URL (output in the run summary).
+# Google auth uses Workload Identity Federation: no key file. Set these repository
+# *variables* (Settings -> Secrets and variables -> Actions -> Variables), printed by scripts/gcp_setup.sh:
+#   GCP_PROJECT_ID, GCP_REGION, GCP_WIF_PROVIDER, GCP_DEPLOY_SA, GCP_RUNTIME_SA, GCS_BUCKET
+# Optional secret: WANDB_API_KEY (training runs are logged to W&B when it is set).
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+env:
+  REGION: ${{ vars.GCP_REGION || 'us-east1' }}
+  IMAGE: ${{ vars.GCP_REGION || 'us-east1' }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/screening-talk/api:${{ github.sha }}
+  WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Heart model
+        run: |
+          python -m src.data.download --topic heart
+          python -m src.data.clean --topic heart
+          python -m src.train_heart
+      - name: Prostate and colorectal models (shared trainer, once it is merged)
+        run: |
+          for t in prostate colorectal; do
+            if [ -s src/train.py ] && grep -q "def run" src/train.py && grep -q "^features:" topics/$t.yaml; then
+              python -m src.data.download --topic $t
+              python -m src.data.clean --topic $t
+              python -m src.train --topic $t --data-uri data/clean/$t/clean.parquet --allow-unverified --no-upload
+              mkdir -p models/$t && cp "$(ls -td runs/*/ | head -1)model.joblib" models/$t/model.joblib
+            else
+              echo "Skipping $t: no shared trainer or no features yet (served as evidence only)"
+            fi
+          done
+          ls -la models/*/
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Build and push image
+        run: |
+          gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
+          docker build --build-arg GIT_COMMIT=${{ github.sha }} -t $IMAGE .
+          docker push $IMAGE
+      - name: Deploy to Cloud Run
+        id: deploy
+        run: |
+          gcloud run deploy screening-talk-api --image $IMAGE --region $REGION \
+            --service-account ${{ vars.GCP_RUNTIME_SA }} --allow-unauthenticated \
+            --memory 1Gi --cpu 1 --min-instances 0 --max-instances 2 \
+            --set-env-vars GCS_BUCKET=${{ vars.GCS_BUCKET }},DOCKER_IMAGE=$IMAGE --quiet
+          echo "url=$(gcloud run services describe screening-talk-api --region $REGION --format 'value(status.url)')" >> $GITHUB_OUTPUT
+      - name: Smoke test the live URL
+        run: |
+          python scripts/smoke_test.py ${{ steps.deploy.outputs.url }} | tee smoke.txt
+          { echo "## Live API: ${{ steps.deploy.outputs.url }}"; echo '```'; cat smoke.txt; echo '```'; } >> $GITHUB_STEP_SUMMARY

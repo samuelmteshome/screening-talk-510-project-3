@@ -1,25 +1,42 @@
 topic: prostate
 model: logistic_regression
 data:
-  nhanes_files: [L11PSA_B, L11PSA_C, PSA_D, PSA_E, PSA_F]   # plus DEMO and BMX for each cycle
   cycles: [2001-2002, 2003-2004, 2005-2006, 2007-2008, 2009-2010]
+  files:                      # NHANES files per cycle, merged on SEQN
+    2001-2002: [DEMO_B, BMX_B, L11PSA_B]
+    2003-2004: [DEMO_C, BMX_C, L11PSA_C]
+    2005-2006: [DEMO_D, BMX_D, PSA_D]
+    2007-2008: [DEMO_E, BMX_E, PSA_E]
+    2009-2010: [DEMO_F, BMX_F, PSA_F]
+  male_only: true
   age_min: 50
   age_max: 69
-  target: raised_psa          # 1 if LBXP1 >= psa_threshold_ng_ml
+  # Men answering yes (1) to any of these were not eligible for PSA testing
+  # (PSA lab file documentation); we also drop them explicitly.
+  exclude_if_yes: [prior_prostate_cancer, prostate_inflammation, rectal_exam_7d, biopsy_4wk, cystoscopy_4wk]
+  target: raised_psa          # 1 if psa >= psa_threshold_ng_ml
   psa_threshold_ng_ml: 4.0
-  exclude_if_yes: [KIQ201, KIQ115, KIQ185, KIQ190_or_KIQ191, KIQ195]
+  version: v1
   clean_uri: gs://<bucket>/clean/prostate/v1/clean.parquet
-  clean_sha256: <hash>
+  clean_sha256: <hash>        # printed by `python -m src.data.upload --topic prostate`
 split:
   train_cycles: [2001-2002, 2003-2004, 2005-2006]
   val_cycles: [2007-2008]
   test_cycles: [2009-2010]
 features: [age, race_eth, bmi]
-feature_sources:            # NHANES variable per feature, by cycle (verify each)
+feature_types: {age: spline, race_eth: categorical, bmi: numeric}
+feature_sources:            # canonical column -> NHANES variable, by cycle (checked against the codebooks)
+  sex: {all: RIAGENDR}
   age: {all: RIDAGEYR}
   race_eth: {all: RIDRETH1}
   bmi: {all: BMXBMI}
+  exam_weight: {all: WTMEC2YR}
   psa: {all: LBXP1}
+  prostate_inflammation: {all: KIQ115}
+  rectal_exam_7d: {all: KIQ185}
+  biopsy_4wk: {"2001-2004": KIQ190, "2005-2010": KIQ191}
+  cystoscopy_4wk: {all: KIQ195}
+  prior_prostate_cancer: {all: KIQ201}
 model_params:
   C_grid: [0.01, 0.1, 1.0, 10.0]
   age_spline_knots: 3
@@ -29,3 +46,4 @@ serve:
   display_age_min: 55
   display_age_max: 69
   evidence_file: evidence/erspc_2025.json
+  extra_evidence_files: [evidence/erspc_metastatic_2012.json, evidence/heijnsdijk_lifeyears_2012.json]

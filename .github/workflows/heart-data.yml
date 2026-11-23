@@ -1,0 +1,36 @@
+name: heart data, EDA and training
+# Downloads the public NHANES + linked mortality files from the CDC, cleans them,
+# and commits the EDA report back to the branch. Raw and clean data stay out of git.
+on:
+  workflow_dispatch:
+    inputs:
+      final:
+        description: "Also score the held-out test cycle (run once, after the model is chosen)"
+        type: boolean
+        default: false
+  push:
+    branches: ["sam/heart-**"]
+    paths: ["topics/heart.yaml", "schema.yaml", "src/data/**", "src/eda.py", "src/train_heart.py", ".github/workflows/heart-data.yml"]
+permissions:
+  contents: write
+jobs:
+  eda:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m src.data.download --topic heart
+      - run: python -m src.data.clean --topic heart
+      - run: python -m src.eda --topic heart
+      - run: python -m src.train_heart ${{ inputs.final && '--final' || '' }}
+      - name: Commit report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/eda/heart docs/cleaning/heart.md docs/models data/raw/MANIFEST.json models/heart/metrics.json
+          git diff --cached --quiet || git commit -m "Heart EDA from real NHANES data [skip ci]"
+          git push

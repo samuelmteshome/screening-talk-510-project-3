@@ -2,29 +2,54 @@ topic: heart
 model: logistic_regression
 data:
   cycles: [1999-2000, 2001-2002, 2003-2004, 2005-2006, 2007-2008]
-  mortality_file: NHANES_<cycle>_MORT_2019_PUBLIC.dat
+  files:                      # NHANES files per cycle, merged on SEQN (DEMO first); last entry = 2019 linked mortality file
+    1999-2000: [DEMO, BMX, LAB13, BPX, BPQ, DIQ, SMQ, MCQ, https://ftp.cdc.gov/pub/Health_Statistics/NCHS/datalinkage/linked_mortality/NHANES_1999_2000_MORT_2019_PUBLIC.dat]
+    2001-2002: [DEMO_B, BMX_B, L13_B, BPX_B, BPQ_B, DIQ_B, SMQ_B, MCQ_B, https://ftp.cdc.gov/pub/Health_Statistics/NCHS/datalinkage/linked_mortality/NHANES_2001_2002_MORT_2019_PUBLIC.dat]
+    2003-2004: [DEMO_C, BMX_C, L13_C, BPX_C, BPQ_C, DIQ_C, SMQ_C, MCQ_C, https://ftp.cdc.gov/pub/Health_Statistics/NCHS/datalinkage/linked_mortality/NHANES_2003_2004_MORT_2019_PUBLIC.dat]
+    2005-2006: [DEMO_D, BMX_D, TCHOL_D, HDL_D, BPX_D, BPQ_D, DIQ_D, SMQ_D, MCQ_D, https://ftp.cdc.gov/pub/Health_Statistics/NCHS/datalinkage/linked_mortality/NHANES_2005_2006_MORT_2019_PUBLIC.dat]
+    2007-2008: [DEMO_E, BMX_E, TCHOL_E, HDL_E, BPX_E, BPQ_E, DIQ_E, SMQ_E, MCQ_E, https://ftp.cdc.gov/pub/Health_Statistics/NCHS/datalinkage/linked_mortality/NHANES_2007_2008_MORT_2019_PUBLIC.dat]
   age_min: 40
   age_max: 75
-  target: cvd_death_10y       # MORTSTAT==1 and UCOD_LEADING in {heart, cerebrovascular} and PERMTH_EXM<=120
-  ucod_codes: [<verify>]      # check the public-use codebook before use
-  exclude_prior_cvd: true
+  target: cvd_death_10y       # died (MORTSTAT 1) of heart disease or stroke within horizon_months of the exam
+  ucod_codes: [1, 5]          # UCOD_LEADING: 001 diseases of heart, 005 cerebrovascular diseases (NCHS public-use codebook)
+  horizon_months: 120
+  exclude_prior_cvd: [chf, chd, angina, heart_attack, stroke]   # MCQ160B-F: ever told by a doctor
+  version: v1
   clean_uri: gs://<bucket>/clean/heart/v1/clean.parquet
   clean_sha256: <hash>
 split:
   train_cycles: [1999-2000, 2001-2002, 2003-2004]
   val_cycles: [2005-2006]
   test_cycles: [2007-2008]
-features: [age, sex, race_eth, total_chol, hdl, sbp, on_bp_meds, diabetes, current_smoker]
-feature_sources:            # NHANES variable per feature, by cycle (verify each)
+# Candidate features; the final list is picked after the EDA (docs/eda/heart/README.md).
+# Used by the model (src/train_heart.py); picked with sam after the EDA.
+model_features: [age, sex, bmi, total_chol, hdl, sbp, on_bp_meds, diabetes, current_smoker]
+features: [age, sex, race_eth, bmi, total_chol, hdl, sbp, on_bp_meds, diabetes, current_smoker]
+feature_sources:            # canonical column -> NHANES variable, by cycle (from the codebooks)
   age: {all: RIDAGEYR}
   sex: {all: RIAGENDR}
   race_eth: {all: RIDRETH1}
+  exam_weight: {all: WTMEC2YR}
+  bmi: {all: BMXBMI}
   total_chol: {all: LBXTC}
   hdl: {"1999-2002": LBDHDL, "2003-2004": LBXHDD, "2005-2008": LBDHDD}
-  sbp: {all: BPXSY1}
-  on_bp_meds: {all: BPQ050A}
-  diabetes: {all: DIQ010}
-  current_smoker: {all: SMQ040}
+  sbp_1: {all: BPXSY1}
+  sbp_2: {all: BPXSY2}
+  sbp_3: {all: BPXSY3}
+  told_high_bp: {all: BPQ020}
+  bp_meds_now: {all: BPQ050A}
+  diabetes_told: {all: DIQ010}
+  smoked_100: {all: SMQ020}
+  smoke_now: {all: SMQ040}
+  chf: {all: MCQ160B}
+  chd: {all: MCQ160C}
+  angina: {all: MCQ160D}
+  heart_attack: {all: MCQ160E}
+  stroke: {all: MCQ160F}
+  eligstat: {all: ELIGSTAT}
+  mortstat: {all: MORTSTAT}
+  ucod_leading: {all: UCOD_LEADING}
+  permth_exm: {all: PERMTH_EXM}
 serve:
   model_uri: gs://<bucket>/models/<run_id>/model.joblib
   display_age_min: 40
