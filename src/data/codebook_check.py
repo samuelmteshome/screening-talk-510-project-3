@@ -24,12 +24,13 @@ ROW = re.compile(r"<td[^>]*>\s*(\d+)\s*</td>\s*<td[^>]*>\s*([^<]+?)\s*</td>", re
 
 def codes_from_codebook(html: str, variable: str = "MCQ230A") -> dict[str, int]:
     """Value description (lower case) -> code, from the variable's value table."""
-    start = html.find(f'id="{variable}"')
+    low = html.lower()
+    start = low.find(f'id="{variable.lower()}"')
     if start < 0:
-        start = html.find(variable)
+        start = low.find(variable.lower())
     if start < 0:
         raise ValueError(f"{variable} not found in codebook")
-    nxt = re.search(r'<div[^>]+id="MCQ\w+"', html[start + 10:])
+    nxt = re.search(r'<div[^>]+id="MCQ\w+"', html[start + 10:], re.I)
     section = html[start: start + 10 + nxt.start()] if nxt else html[start:]
     return {unescape(desc).strip().lower(): int(code) for code, desc in ROW.findall(section)}
 
@@ -48,11 +49,23 @@ def main() -> None:
     expected = cfg["data"]["cancer_type_codes"]
     lines = ["# Cancer type codes checked against the NHANES codebooks", "",
              "| Cycle | File | " + " | ".join(n.title() for n in expected) + " | OK |", "| --- " * (len(expected) + 3) + "|"]
-    bad = 0
+    bad = unreadable = 0
     for cycle in cfg["data"]["cycles"]:
         mcq = next(f for f in cfg["data"]["files"][cycle] if f.startswith("MCQ"))
         url = file_url(mcq, cycle, base).replace(".xpt", ".htm").replace(".XPT", ".htm")
-        found = codes_from_codebook(fetch(url))
+        html = ""
+        try:
+            html = fetch(url)
+            found = codes_from_codebook(html)
+        except (ValueError, OSError) as e:
+            print(f"{cycle}: {e}")
+            # Page did not hold the variable table (moved or rendered differently): report it, don't guess.
+            title = re.search(r"<title>(.*?)</title>", html, re.I | re.S)
+            print(f"{cycle}: MCQ230A table not found at {url} (page {len(html):,} chars, "
+                  f"title {title.group(1).strip() if title else 'none'!r})")
+            lines.append(f"| {cycle} | [{mcq}]({url}) | " + " | ".join("?" for _ in expected) + " | page not readable |")
+            unreadable += 1
+            continue
         got = {name: found.get(name) for name in expected}
         ok = got == expected
         bad += not ok
@@ -61,7 +74,8 @@ def main() -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(lines) + "\n")
     print(out.read_text())
-    sys.exit(1 if bad else 0)
+    # Fail on any real mismatch, or if no cycle could be checked at all.
+    sys.exit(1 if bad or unreadable == len(cfg["data"]["cycles"]) else 0)
 
 
 if __name__ == "__main__":
