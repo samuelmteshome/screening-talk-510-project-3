@@ -57,3 +57,15 @@ def test_render_fills_template_and_escapes_script_end():
     blob = re.search(r"const DATA = (.*);\n", html).group(1)
     assert "</" not in blob
     assert json.loads(blob.replace("<\\/", "</"))["start"]["option"] == "statin"
+
+
+def test_questionnaire_answers_round_trip_through_the_url():
+    import intake
+    a = {"sex": "male", "age": 61, "bmi": 25.8, "race_eth": None, "history": ["prior_cvd"], "family_crc": None,
+         "smoking": "former", "diabetes": True, "on_bp_meds": False, "sbp": 145}
+    p = intake.to_params(a)
+    assert p == {"sex": "male", "age": "61", "bmi": "25.8", "sbp": "145", "diabetes": "1", "ever_smoked": "1",
+                 "prior_cvd": "1"}
+    back = intake.from_params(p, {"prior_cvd"})
+    assert back["smoking"] == "former" and back["age"] == 61 and back["history"] == ["prior_cvd"]
+    assert intake.bp_reading(145, {})[0].startswith("High") and intake.hdl_reading(45, {"sex": "female"})[0].startswith("Low")
