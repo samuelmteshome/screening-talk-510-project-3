@@ -109,7 +109,7 @@ def run(topic: str, clean_path: Path, out_dir: Path) -> Path:
     keep = cfg["split"]["train_cycles"] + cfg["split"]["val_cycles"]
     held_out = cfg["split"]["test_cycles"]
     df = df[df["cycle"].isin(keep)].copy()
-    features = [f for f in cfg["features"] if f in df.columns]
+    features = [f for f in cfg.get("eda_features", cfg["features"]) if f in df.columns]
     out_dir.mkdir(parents=True, exist_ok=True)
     md = [f"# EDA: {topic}", "",
           f"Training and validation cycles only ({', '.join(keep)}); test cycles ({', '.join(held_out)}) are not looked at.", ""]

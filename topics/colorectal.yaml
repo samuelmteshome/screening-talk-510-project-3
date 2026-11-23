@@ -27,8 +27,11 @@ split:
   val_cycles: [2011-2012, 2013-2014]
   test_cycles: [2015-2016, 2017-2018]
 # Candidate features; trimmed after the EDA (docs/eda/colorectal/README.md). Trained with the shared src/train.py.
-features: [age, sex, race_eth, bmi, ever_smoked, current_smoker, diabetes]
-feature_types: {age: spline, sex: categorical, race_eth: categorical, bmi: numeric, ever_smoked: numeric, current_smoker: numeric, diabetes: numeric}
+# Model features, picked by sam 2026-11-23 from the EDA: no race (as in heart), ever smoked only.
+features: [age, sex, bmi, ever_smoked, diabetes]
+feature_types: {age: spline, sex: categorical, bmi: numeric, ever_smoked: numeric, diabetes: numeric}
+# Candidates the EDA looks at (the model uses `features` above).
+eda_features: [age, sex, race_eth, bmi, ever_smoked, current_smoker, diabetes]
 feature_sources:
   age: {all: RIDAGEYR}
   sex: {all: RIAGENDR}
