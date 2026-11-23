@@ -117,8 +117,8 @@ def validate(df: pd.DataFrame, rules: dict[str, dict[str, Any]], label: str) -> 
                 off = present[present < rule[key]] if low else present[present > rule[key]]
                 if len(off):
                     where = f" (cycles {sorted(df.loc[off.index, 'cycle'].unique())})" if "cycle" in df else ""
-                    problems.append(f"{col}: {len(off)} values {'below' if low else 'above'} {rule[key]}, "
-                                    f"e.g. {sorted(off.unique())[:5]}{where}")
+                    problems.append(f"{col}: values {'below' if low else 'above'} {rule[key]} "
+                                    f"({len(off)} rows, e.g. {sorted(off.unique())[:5]}{where})")
     if problems:
         raise SchemaError(f"{label} failed schema.yaml checks:\n  " + "\n  ".join(problems))
 

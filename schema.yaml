@@ -55,6 +55,8 @@ colorectal:
   smoke_now: {allowed: [1, 2, 3, 7, 9], nullable: true}
   diabetes_told: {allowed: [1, 2, 3, 7, 9], nullable: true}
   ever_cancer: {allowed: [1, 2, 7, 9], nullable: true}
-  cancer_1: {min: 10, max: 99, nullable: true}  # cancer type codes (77/99 refused / don't know)
+  # Cancer type codes run 10-39, plus 66/77/99. One 2005-2006 record has an undocumented 9;
+  # it is not colon (16) or rectum (31), so it counts as another cancer.
+  cancer_1: {min: 9, max: 99, nullable: true}
   cancer_2: {min: 10, max: 99, nullable: true}
   cancer_3: {min: 10, max: 99, nullable: true}
