@@ -1,5 +1,5 @@
 {
-  "source": "Yusuf et al., HOPE-3 cholesterol arm, NEJM 2016",
+  "source": "Yusuf et al., Cholesterol Lowering in Intermediate-Risk Persons without Cardiovascular Disease (HOPE-3), NEJM 2016;374:2021-2031",
   "url": "https://www.nejm.org/doi/full/10.1056/NEJMoa1600176",
   "comparison": "Rosuvastatin 10 mg vs placebo",
   "horizon_years": 5.6,
@@ -7,24 +7,30 @@
   "numbers": {
     "cv_death_mi_stroke_statin": {
       "value": 37,
-      "ref": "ACC summary 3.7%; confirm"
+      "ref": "abstract: 235 participants (3.7%)"
     },
     "cv_death_mi_stroke_placebo": {
       "value": 48,
-      "ref": "ACC summary 4.8%; confirm"
+      "ref": "abstract: 304 participants (4.8%); HR 0.76 (95% CI 0.64-0.91)"
     },
     "new_diabetes_statin": {
       "value": 39,
-      "ref": "ACC summary; confirm"
+      "ref": "ACC trial summary 3.9% (abstract: no excess of diabetes)"
     },
     "new_diabetes_placebo": {
       "value": 38,
-      "ref": "ACC summary; confirm"
+      "ref": "ACC trial summary 3.8%, P = 0.82"
     },
-    "muscle_symptoms": {
-      "value": null,
-      "ref": "TODO safety table"
+    "muscle_symptoms_statin": {
+      "value": 58,
+      "ref": "abstract: 5.8%"
+    },
+    "muscle_symptoms_placebo": {
+      "value": 47,
+      "ref": "abstract: 4.7%, P = 0.005"
     }
   },
-  "verified_by": null
+  "verified_by": "alberto",
+  "verified_on": "2026-11-22",
+  "verified_against": "NEJM abstract and the ACC trial summary (diabetes rates)"
 }
