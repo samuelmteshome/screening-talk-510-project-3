@@ -13,7 +13,7 @@ from urllib.parse import urlencode
 from body_map import CLICK_SCRIPT, ORGANS
 from catalog import TOPICS, topics_for
 
-BRANCHES = {"medications": "Medications", "screening": "Screening"}
+BRANCHES = {"medications": "Medications", "lifestyle": "Lifestyle", "screening": "Screening"}
 
 
 @dataclass(frozen=True)
@@ -31,12 +31,22 @@ OPTIONS: tuple[Option, ...] = (
     Option("bp", "heart", "medications", "Blood pressure medicine",
            ("blood pressure", "hypertension", "lisinopril", "amlodipine", "bp")),
     Option("aspirin", "heart", "medications", "Low-dose aspirin", ("aspirin", "baby aspirin")),
+    Option("quit_smoking", "heart", "lifestyle", "Quit smoking",
+           ("quit smoking", "smoking", "stop smoking", "cigarettes", "smoking cessation", "nicotine")),
+    Option("exercise", "heart", "lifestyle", "Regular exercise",
+           ("exercise", "physical activity", "walking", "running", "workout", "weights", "strength training")),
+    Option("weight_loss", "heart", "lifestyle", "Weight loss",
+           ("weight loss", "lose weight", "diet", "obesity", "bmi")),
     Option("checkups", "heart", "screening", "Regular checkups",
            ("checkup", "check-up", "primary care", "physical", "annual exam", "heart screening")),
     Option("psa", "prostate", "screening", "PSA blood test",
            ("psa", "prostate exam", "prostate specific antigen", "prostate cancer screening")),
     Option("colonoscopy", "colorectal", "screening", "Colonoscopy",
            ("colonoscopy", "colon cancer screening", "bowel screening", "colorectal screening")),
+    Option("fobt", "colorectal", "screening", "Stool test (FOBT / FIT)",
+           ("fobt", "fit", "stool test", "fecal occult blood", "hemoccult", "cologuard", "poop test")),
+    Option("sigmoidoscopy", "colorectal", "screening", "Sigmoidoscopy",
+           ("sigmoidoscopy", "flex sig", "flexible sigmoidoscopy")),
 )
 
 

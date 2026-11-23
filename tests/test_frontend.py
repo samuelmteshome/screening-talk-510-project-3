@@ -1,4 +1,5 @@
 """Front-end logic: which organs show, search, evidence loading, body map links."""
+import json
 import sys
 from pathlib import Path
 
@@ -97,11 +98,13 @@ def test_flowchart_lists_only_options_with_data():
     import heart_actions as ha
     tree = flowchart.options_for("heart")
     assert [o.id for o in tree["medications"]] == ["statin", "bp", "aspirin"]
+    assert [o.id for o in tree["lifestyle"]] == ["quit_smoking", "exercise", "weight_loss"]
     assert [o.id for o in tree["screening"]] == ["checkups"]
     assert "medications" not in flowchart.options_for("colorectal")
+    lifestyle = json.loads((Path(__file__).resolve().parents[1] / "evidence" / "lifestyle.json").read_text())["actions"]
     for o in flowchart.OPTIONS:
         if o.topic == "heart":
-            assert o.id in ha.ACTIONS
+            assert o.id in ha.ACTIONS or o.id in lifestyle
 
 
 def test_flowchart_expands_branch_and_links_options():
@@ -135,3 +138,15 @@ def test_prevent_equations_behave():
     import pytest
     with pytest.raises(ValueError):
         prevent.risk("male", 82)
+
+
+def test_colon_risk_personal():
+    import colon_risk
+    base = {"sex": "male", "age": 55, "bmi": 25}
+    r = colon_risk.risk(base)
+    assert 0.005 < r < 0.02                                   # about 1 in 100 over 10 years
+    assert colon_risk.risk({**base, "age": 70}) > r
+    assert colon_risk.risk({**base, "sex": "female"}) < r
+    assert colon_risk.risk({**base, "family_crc": 1}) > r * 1.8
+    assert colon_risk.factors({**base, "bmi": 32, "ever_smoked": 1}) == {"ever_smoked": 1.18, "obese": 1.334}
+    assert colon_risk.risk(base, "mortality") < r

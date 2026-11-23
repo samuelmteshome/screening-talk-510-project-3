@@ -24,6 +24,7 @@ split:
   val_cycles: [2007-2008]
   test_cycles: [2009-2010]
 features: [age, race_eth, bmi]
+feature_types: {age: spline, race_eth: categorical, bmi: numeric}
 feature_sources:            # canonical column -> NHANES variable, by cycle (checked against the codebooks)
   sex: {all: RIAGENDR}
   age: {all: RIDAGEYR}

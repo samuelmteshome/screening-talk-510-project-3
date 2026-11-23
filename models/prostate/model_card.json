@@ -1,0 +1,61 @@
+{
+  "topic": "prostate",
+  "run_id": "m4xug7gr",
+  "created_at": "2026-11-23T14:35:20+00:00",
+  "target": "raised_psa",
+  "features": [
+    "age",
+    "race_eth",
+    "bmi"
+  ],
+  "feature_types": {
+    "age": "spline",
+    "race_eth": "categorical",
+    "bmi": "numeric"
+  },
+  "model": "LogisticRegression(C=1.0)",
+  "trained_on_cycles": [
+    "2001-2002",
+    "2003-2004",
+    "2005-2006",
+    "2007-2008"
+  ],
+  "evaluated_on": "test",
+  "metrics": {
+    "split": "test",
+    "model": {
+      "n": 864,
+      "auc": 0.6627925410696945,
+      "brier": 0.0662851845831147,
+      "observed_rate": 0.07291666666666667,
+      "mean_predicted": 0.07222501103236628,
+      "auc_ci95": [
+        0.6074644088232655,
+        0.7152564934861496
+      ]
+    },
+    "baseline_age_group": {
+      "n": 864,
+      "auc": 0.6863048173909596,
+      "brier": 0.06567676144104062,
+      "observed_rate": 0.07291666666666667,
+      "mean_predicted": 0.07290771649896248
+    },
+    "brier_skill_vs_baseline": -0.009263902919760758,
+    "selected_C": 1.0,
+    "validation_brier_by_C": {
+      "0.01": 0.06959831348342511,
+      "0.1": 0.0686908956211656,
+      "1.0": 0.06861084770470408,
+      "10.0": 0.06864055469009847
+    }
+  },
+  "data": {
+    "uri": "data/clean/prostate/clean.parquet",
+    "sha256": "acf3b1548941b961c6d628023a2ee4401b164fe67181c1411f1a38d44747c7a3",
+    "rows": 3430,
+    "verified": false
+  },
+  "survey_weights": false,
+  "intended_use": "Educational demo for patient-doctor conversations. Not medical advice."
+}

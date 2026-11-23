@@ -11,7 +11,9 @@ sys.path.insert(0, str(REPO / "app"))
 import prevent  # noqa: E402
 
 EVIDENCE = REPO / "evidence"
-TRIAL_FILES = sorted(p for p in EVIDENCE.glob("*.json") if p.name != "heart_actions.json")
+# These files have their own layout (per-action or per-age entries, no top-level numbers).
+OTHER_LAYOUTS = {"heart_actions.json", "colorectal_risk.json", "lifestyle.json"}
+TRIAL_FILES = sorted(p for p in EVIDENCE.glob("*.json") if p.name not in OTHER_LAYOUTS)
 
 
 @pytest.mark.parametrize("path", TRIAL_FILES, ids=lambda p: p.name)

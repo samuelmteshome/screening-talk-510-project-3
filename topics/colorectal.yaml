@@ -1,6 +1,56 @@
 topic: colorectal
-model: none
+model: logistic_regression
+# Target = ever told by a doctor you had colon or rectal cancer (NHANES MCQ cancer history).
+# Cross-sectional: a snapshot of people who have had it, not a forecast (same limit as prostate).
+data:
+  cycles: [1999-2000, 2001-2002, 2003-2004, 2005-2006, 2007-2008, 2009-2010, 2011-2012, 2013-2014, 2015-2016, 2017-2018]
+  files:                      # merged on SEQN, DEMO first
+    1999-2000: [DEMO, BMX, SMQ, DIQ, MCQ]
+    2001-2002: [DEMO_B, BMX_B, SMQ_B, DIQ_B, MCQ_B]
+    2003-2004: [DEMO_C, BMX_C, SMQ_C, DIQ_C, MCQ_C]
+    2005-2006: [DEMO_D, BMX_D, SMQ_D, DIQ_D, MCQ_D]
+    2007-2008: [DEMO_E, BMX_E, SMQ_E, DIQ_E, MCQ_E]
+    2009-2010: [DEMO_F, BMX_F, SMQ_F, DIQ_F, MCQ_F]
+    2011-2012: [DEMO_G, BMX_G, SMQ_G, DIQ_G, MCQ_G]
+    2013-2014: [DEMO_H, BMX_H, SMQ_H, DIQ_H, MCQ_H]
+    2015-2016: [DEMO_I, BMX_I, SMQ_I, DIQ_I, MCQ_I]
+    2017-2018: [DEMO_J, BMX_J, SMQ_J, DIQ_J, MCQ_J]
+  age_min: 45                 # USPSTF screening starts at 45
+  age_max: 79                 # NHANES top-codes age at 80 (85 before 2007)
+  cancer_type_codes: {colon: 16, rectum: 31}   # MCQ230A-C values; checked against the codebooks by src/data/codebook_check.py
+  target: ever_crc            # 1 if told colon or rectal cancer
+  version: v1
+  clean_uri: gs://<bucket>/clean/colorectal/v1/clean.parquet
+  clean_sha256: <hash>        # printed by `python -m src.data.upload --topic colorectal`
+split:
+  train_cycles: [1999-2000, 2001-2002, 2003-2004, 2005-2006, 2007-2008, 2009-2010]
+  val_cycles: [2011-2012, 2013-2014]
+  test_cycles: [2015-2016, 2017-2018]
+# Candidate features; trimmed after the EDA (docs/eda/colorectal/README.md). Trained with the shared src/train.py.
+# Model features, picked by sam 2026-11-23 from the EDA: no race (as in heart), ever smoked only.
+features: [age, sex, bmi, ever_smoked, diabetes]
+feature_types: {age: spline, sex: categorical, bmi: numeric, ever_smoked: numeric, diabetes: numeric}
+# Candidates the EDA looks at (the model uses `features` above).
+eda_features: [age, sex, race_eth, bmi, ever_smoked, current_smoker, diabetes]
+feature_sources:
+  age: {all: RIDAGEYR}
+  sex: {all: RIAGENDR}
+  race_eth: {all: RIDRETH1}
+  exam_weight: {all: WTMEC2YR}
+  bmi: {all: BMXBMI}
+  smoked_100: {all: SMQ020}
+  smoke_now: {all: SMQ040}
+  diabetes_told: {all: DIQ010}
+  ever_cancer: {all: MCQ220}
+  cancer_1: {all: MCQ230A}
+  cancer_2: {all: MCQ230B}
+  cancer_3: {all: MCQ230C}
+model_params:
+  C_grid: [0.01, 0.1, 1.0, 10.0]
+  age_spline_knots: 3
+  use_survey_weights: false
 serve:
-  display_age_min: 55
-  display_age_max: 64
-  evidence_file: evidence/nordicc_2022.json
+  model_uri: gs://<bucket>/models/<run_id>/model.joblib
+  display_age_min: 45
+  display_age_max: 75
+  evidence_file: evidence/colorectal_risk.json

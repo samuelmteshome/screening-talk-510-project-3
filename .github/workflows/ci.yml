@@ -12,5 +12,17 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - run: pip install -r requirements.txt
+      - run: pip install -r requirements.txt "streamlit>=1.40"
       - run: pytest -q tests
+  docker:
+    # Builds the image and checks the API answers inside the container (no models: evidence only).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t screening-talk:ci .
+      - run: |
+          docker run -d --name api -p 8080:8080 screening-talk:ci
+          for i in $(seq 1 30); do curl -sf localhost:8080/health && break; sleep 2; done
+          pip install requests
+          python scripts/smoke_test.py http://localhost:8080
+          docker logs api
