@@ -426,8 +426,9 @@ def colon_test_detail(p: dict, test: str) -> list[dict]:
                                              f"Testing every other year instead of every year gave a smaller benefit "
                                              f"({rel(t['biennial_crc_death']['rr'])}% fewer colorectal cancer deaths).")},
                  {"type": "text", "html": md(t["fit_note"])},
-                 {"type": "caption", "html": md("A positive stool test is followed by a colonoscopy. The trial followed people "
-                                                "for 30 years; here its effect is applied to your next 10.")}]
+                 {"type": "caption", "html": md("A positive stool test is followed by a colonoscopy. Numbers are for everyone "
+                                                "invited to screening, including people who never did the test, followed for "
+                                                "30 years; here the effect is applied to your next 10.")}]
     else:
         more += [{"type": "text", "html": md("Sigmoidoscopy looks at the lower third of the colon with a short scope, usually "
                                              "without sedation. Anything suspicious is followed by a full colonoscopy.")},
