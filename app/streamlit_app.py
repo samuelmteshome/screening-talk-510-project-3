@@ -37,7 +37,7 @@ RACE_OPTIONS = {
     "Non-Hispanic Black": "non_hispanic_black",
     "Mexican American": "mexican_american",
     "Other Hispanic": "other_hispanic",
-    "Other or multiracial": "other",
+    "Other or multiracial": "other_or_multiracial",
 }
 # Optional answers the heart model will use once it is trained.
 HEART_FIELDS = ("total_chol", "hdl", "sbp", "on_bp_meds", "diabetes", "current_smoker")
