@@ -37,6 +37,31 @@ def test_download_writes_manifest(tmp_path, config, prostate_cfg, monkeypatch):
     assert len(manifest) == 6
 
 
+def test_snapshot_keeps_each_file_name(tmp_path, config, prostate_cfg, monkeypatch):
+    """A .dat entry (linked mortality file) keeps its extension in the dated snapshot."""
+    def fake_fetch(url, dest, retries=3):
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(b"x")
+
+    uploaded = []
+    monkeypatch.setattr(download, "fetch", fake_fetch)
+    monkeypatch.setattr(download.storage, "put", lambda path, uri: uploaded.append(uri))
+    config["storage"]["bucket"] = "test-bucket"
+    mort = "https://ftp.cdc.gov/pub/NHANES_2009_2010_MORT_2019_PUBLIC.dat"
+    prostate_cfg["data"]["cycles"] = ["2009-2010"]
+    prostate_cfg["data"]["files"] = {"2009-2010": ["DEMO_F", mort]}
+    manifest = download.download_topic("prostate", config, prostate_cfg, raw_dir=tmp_path / "raw",
+                                       manifest_path=tmp_path / "MANIFEST.json", snapshot=True)
+    names = sorted(uri.rsplit("/", 1)[-1] for uri in uploaded)
+    assert names == ["DEMO_F.xpt", "NHANES_2009_2010_MORT_2019_PUBLIC.dat"]
+    assert manifest["prostate/2009-2010/NHANES_2009_2010_MORT_2019_PUBLIC.dat"]["snapshot_uri"].endswith(".dat")
+
+
+def test_ssl_context_verifies_certificates():
+    ctx = download.ssl_context()
+    assert ctx.verify_mode.name == "CERT_REQUIRED" and ctx.check_hostname
+
+
 def test_clean_applies_prostate_rules(tmp_path, config, prostate_cfg):
     path = clean_topic("prostate", config, prostate_cfg, docs_dir=tmp_path / "docs")
     df = pd.read_parquet(path)

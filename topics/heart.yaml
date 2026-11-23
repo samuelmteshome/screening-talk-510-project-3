@@ -16,7 +16,7 @@ data:
   exclude_prior_cvd: [chf, chd, angina, heart_attack, stroke]   # MCQ160B-F: ever told by a doctor
   version: v1
   clean_uri: gs://<bucket>/clean/heart/v1/clean.parquet
-  clean_sha256: <hash>
+  clean_sha256: b8a1c60aec50d3d0c4c92deec65fa89e51c14b72afaabe73ba603b7788910978
 split:
   train_cycles: [1999-2000, 2001-2002, 2003-2004]
   val_cycles: [2005-2006]

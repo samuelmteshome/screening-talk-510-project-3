@@ -6,7 +6,7 @@ data:
   raw_dir: data/raw           # local downloads (git-ignored except MANIFEST.json)
   clean_dir: data/clean       # local cleaned parquet before upload
   cache_dir: data/cache       # local copy of the cloud data used for training
-  raw_snapshot_uri: gs://<bucket>/raw/{date}/{topic}/{cycle}/{file}.xpt
+  raw_snapshot_uri: gs://<bucket>/raw/{date}/{topic}/{cycle}/{file}
 tracking:                     # MLflow (src/tracking.py); MLFLOW_TRACKING_URI overrides uri
   experiment: screening-talk
   uri: sqlite:///mlflow.db    # relative to the repo; run files go to mlruns/

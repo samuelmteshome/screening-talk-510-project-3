@@ -34,6 +34,7 @@ def prostate_cfg(tmp_path):
     cfg = copy.deepcopy(load_topic("prostate"))
     cfg["data"]["cycles"] = list(FIXTURE_CYCLES)
     cfg["data"]["files"] = dict(FIXTURE_CYCLES)
+    cfg["data"]["clean_sha256"] = "<hash>"  # fixture data never matches the real hash
     cfg["data"]["clean_uri"] = str(tmp_path / "bucket" / "clean" / "prostate" / "v1" / "clean.parquet")
     return cfg
 
