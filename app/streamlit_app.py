@@ -24,6 +24,7 @@ import body_map  # noqa: E402
 import flowchart  # noqa: E402
 import heart_actions as ha  # noqa: E402
 import prevent  # noqa: E402
+import colon_risk  # noqa: E402
 from catalog import (  # noqa: E402
     HISTORY_QUESTIONS, TOPICS, chart_rows, eligibility, load_evidence, number_rows, topics_for,
 )
@@ -79,6 +80,9 @@ def intake() -> None:
         race = st.selectbox("Race / ethnicity", list(RACE_OPTIONS))
         st.markdown("**Have you ever been told by a doctor that you had any of these?**")
         history = {k: st.checkbox(label, key=f"hx_{k}") for k, label in HISTORY_QUESTIONS.items()}
+        st.markdown("**A few more questions**")
+        family_crc = st.checkbox("A parent, brother, sister, or child has had colorectal (colon) cancer")
+        ever_smoked = st.checkbox("I smoke now or used to smoke regularly")
         with st.expander("Heart details (optional, used once the heart model is ready)"):
             chol = st.number_input("Total cholesterol (mg/dL)", min_value=0, max_value=500, value=0,
                                    help="Leave at 0 if you don't know")
@@ -99,6 +103,7 @@ def intake() -> None:
                      "on_bp_meds": int(bp_meds), "diabetes": int(diabetes), "current_smoker": int(smoker)}
             answers.update({k: v for k, v in heart.items() if v})
             answers.update({k: 1 for k, yes in history.items() if yes})
+            answers.update({k: 1 for k, yes in (("family_crc", family_crc), ("ever_smoked", ever_smoked)) if yes})
             qp.from_dict({k: str(v) for k, v in answers.items()})
             st.rerun()
 
@@ -213,6 +218,8 @@ def topic_page(topic_id: str, age: int) -> None:
     result = prediction(t.id) if t.has_model else None
     if t.id == "heart":
         heart_choices(result, option.id)
+    elif t.id == "colorectal":
+        colon_choices()
     else:
         st.header(option.label)
         st.subheader("Your prediction")
@@ -290,6 +297,28 @@ def heart_choices(result: dict | None, action: str) -> None:
                         "common (stomach bleeding and, rarely, bleeding in the brain).")
     st.caption(f"Source: [{eff['source']}]({eff['url']}). Results apply to people who have never had a heart "
                "attack or stroke. Numbers not yet checked against the full paper.")
+
+
+def colon_choices() -> None:
+    """Personal colonoscopy page: your 10-year colorectal cancer chance, with and without a colonoscopy."""
+    p = profile()
+    d = colon_risk.data()
+    st.subheader("If you get a colonoscopy")
+    get, die = colon_risk.risk(p, "incidence"), colon_risk.risk(p, "mortality")
+    eff = d["colonoscopy"]["if_screened"]
+    for outcome, base in (("crc", get), ("crc_death", die)):
+        st.markdown("- " + ha.sentence(ha.compare(base, eff[outcome]["rr"], outcome)))
+    st.markdown("- The trial found **no clear change** in deaths from any cause.")
+    names = {k: v["label"] for k, v in d["risk_factors"].items()}
+    raised = [names[k] for k in colon_risk.factors(p)]
+    who = f"a {int(p['age'])}-year-old {'man' if p['sex'] == 'male' else 'woman'}"
+    st.caption(f"Your starting chance is the US average for {who}"
+               + (f", raised because you said: {'; '.join(raised)}." if raised else ".")
+               + " Colonoscopy numbers are for people who actually had one in the NordICC trial (ages 55 to 64, "
+               "10 years). Among everyone invited, only 42% went, so the benefit for the whole invited group was smaller.")
+    srcs = [d["baseline"], *d["risk_factors"].values(), d["colonoscopy"]]
+    st.caption("Sources: " + "; ".join(f"[{s['source'].split('(')[0].strip()}]({s['url']})" for s in srcs)
+               + ". Numbers not yet checked against the full papers.")
 
 
 def show_evidence(t) -> None:
