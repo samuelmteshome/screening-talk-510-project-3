@@ -1,0 +1,194 @@
+{
+  "source": "Personal colorectal cancer risk: SEER age-specific rates plus meta-analysis relative risks; colonoscopy effect from NordICC",
+  "baseline": {
+    "source": "SEER Cancer Statistics Review 1975-2017, Table 6.10 (colon and rectum, all races, age-specific rates 2013-2017, per 100,000)",
+    "url": "https://seer.cancer.gov/csr/1975_2017/results_single/sect_06_table.10.pdf",
+    "age_bands": [
+      40,
+      45,
+      50,
+      55,
+      60,
+      65,
+      70,
+      75,
+      80
+    ],
+    "incidence": {
+      "male": [
+        20.2,
+        36.1,
+        69.2,
+        80.7,
+        106.1,
+        141.0,
+        173.6,
+        217.5,
+        265.5
+      ],
+      "female": [
+        18.7,
+        30.7,
+        54.6,
+        55.6,
+        71.9,
+        97.8,
+        123.2,
+        165.6,
+        213.1
+      ]
+    },
+    "mortality": {
+      "male": [
+        5.0,
+        9.6,
+        16.6,
+        24.8,
+        36.1,
+        48.6,
+        65.0,
+        91.7,
+        128.0
+      ],
+      "female": [
+        4.0,
+        7.3,
+        11.5,
+        16.3,
+        22.0,
+        30.6,
+        41.7,
+        63.4,
+        94.1
+      ]
+    }
+  },
+  "risk_factors": {
+    "family_history": {
+      "rr": 1.92,
+      "ci": [
+        1.53,
+        2.41
+      ],
+      "label": "a parent, brother, sister or child had colorectal cancer",
+      "source": "Roos et al., Clin Gastroenterol Hepatol 2019;17:2657 (one first-degree relative, case-control studies; cohort studies 1.37)",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/31525516/"
+    },
+    "ever_smoked": {
+      "rr": 1.18,
+      "ci": [
+        1.11,
+        1.25
+      ],
+      "label": "ever smoked",
+      "source": "Botteri et al., JAMA 2008;300:2765 (ever vs never smokers, 26 studies)",
+      "url": "https://boa.unimib.it/handle/10281/12883"
+    },
+    "obese": {
+      "rr": 1.334,
+      "ci": [
+        1.253,
+        1.42
+      ],
+      "label": "BMI 30 or higher",
+      "source": "Ma et al., PLoS One 2013;8:e53916 (obese vs normal BMI, prospective studies)",
+      "url": "https://doaj.org/article/09e610551a6845d09ce6bcaa3682064c"
+    }
+  },
+  "colonoscopy": {
+    "source": "NordICC, Bretthauer et al., NEJM 2022;387:1547 (ages 55-64, 10 years), as summarized by ACG Evidence-Based GI",
+    "url": "https://gi.org/journals-publications/ebgi/patel_october2022/",
+    "if_screened": {
+      "crc": {
+        "rr": 0.69,
+        "ci": [
+          0.55,
+          0.83
+        ]
+      },
+      "crc_death": {
+        "rr": 0.5,
+        "ci": [
+          0.27,
+          0.77
+        ]
+      }
+    },
+    "if_invited": {
+      "crc": {
+        "rr": 0.82,
+        "ci": [
+          0.7,
+          0.93
+        ]
+      },
+      "crc_death": {
+        "rr": 0.9,
+        "ci": [
+          0.64,
+          1.16
+        ]
+      }
+    },
+    "share_screened_pct": 42,
+    "all_cause_death": "no difference"
+  },
+  "verified_by": null,
+  "sigmoidoscopy": {
+    "source": "Juul et al., Ann Intern Med 2022;175:1525-1533 (4 randomized trials, 274,952 people aged 55-64, 15 years)",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/36215714/",
+    "if_invited": {
+      "crc": {
+        "rr": 0.79,
+        "ci": [
+          0.75,
+          0.83
+        ]
+      },
+      "crc_death": {
+        "rr": 0.8,
+        "ci": [
+          0.72,
+          0.88
+        ]
+      }
+    },
+    "attendance": "58% to 84% of those invited went",
+    "how_often": "once, or every 5 to 10 years",
+    "verified_by": "claude",
+    "verified_on": "2026-11-23",
+    "verified_against": "PubMed abstract"
+  },
+  "fobt": {
+    "source": "Shaukat et al., Long-Term Mortality after Screening for Colorectal Cancer, NEJM 2013;369:1106-1114 (Minnesota trial, 46,551 people aged 50-80, 30 years)",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/24047060/",
+    "if_invited": {
+      "crc_death": {
+        "rr": 0.68,
+        "ci": [
+          0.56,
+          0.82
+        ]
+      }
+    },
+    "all_cause": {
+      "rr": 1.0,
+      "ci": [
+        0.99,
+        1.01
+      ]
+    },
+    "biennial_crc_death": {
+      "rr": 0.78,
+      "ci": [
+        0.65,
+        0.93
+      ]
+    },
+    "how_often": "every year",
+    "fit_note": "Today most clinics use FIT, a newer stool test that finds more cancers. FIT has no finished randomized trial yet; a study of 5.4 million people found about 10% fewer colorectal cancer deaths after 6 years (USPSTF 2021).",
+    "verified_by": "claude",
+    "verified_on": "2026-11-23",
+    "verified_against": "PubMed abstract and NCI CDAS trial summary"
+  }
+}
