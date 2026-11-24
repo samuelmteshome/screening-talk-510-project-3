@@ -10,6 +10,12 @@ FIXTURES = Path(__file__).parent / "fixtures"
 FIXTURE_CYCLES = {"2003-2004": ["DEMO_C", "BMX_C", "L11PSA_C"], "2009-2010": ["DEMO_F", "BMX_F", "PSA_F"]}
 
 
+@pytest.fixture(autouse=True)
+def mlflow_store(tmp_path, monkeypatch):
+    """Keep test runs out of the repo's mlflow.db."""
+    monkeypatch.setenv("MLFLOW_TRACKING_URI", f"sqlite:///{tmp_path / 'mlflow.db'}")
+
+
 @pytest.fixture
 def config(tmp_path):
     cfg = copy.deepcopy(load_config())
@@ -28,6 +34,7 @@ def prostate_cfg(tmp_path):
     cfg = copy.deepcopy(load_topic("prostate"))
     cfg["data"]["cycles"] = list(FIXTURE_CYCLES)
     cfg["data"]["files"] = dict(FIXTURE_CYCLES)
+    cfg["data"]["clean_sha256"] = "<hash>"  # fixture data never matches the real hash
     cfg["data"]["clean_uri"] = str(tmp_path / "bucket" / "clean" / "prostate" / "v1" / "clean.parquet")
     return cfg
 

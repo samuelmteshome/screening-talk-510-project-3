@@ -3,6 +3,7 @@ google-cloud-storage
 httpx
 joblib
 matplotlib
+mlflow
 pandas
 pyarrow
 pydantic
@@ -11,4 +12,3 @@ python-dotenv
 pyyaml
 scikit-learn
 uvicorn[standard]
-wandb

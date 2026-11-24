@@ -18,7 +18,7 @@ data:
   psa_threshold_ng_ml: 4.0
   version: v1
   clean_uri: gs://<bucket>/clean/prostate/v1/clean.parquet
-  clean_sha256: <hash>        # printed by `python -m src.data.upload --topic prostate`
+  clean_sha256: acf3b1548941b961c6d628023a2ee4401b164fe67181c1411f1a38d44747c7a3        # printed by `python -m src.data.upload --topic prostate`
 split:
   train_cycles: [2001-2002, 2003-2004, 2005-2006]
   val_cycles: [2007-2008]
