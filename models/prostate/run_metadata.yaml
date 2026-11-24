@@ -1,9 +1,9 @@
-run_id: m4xug7gr
-created_at: '2026-11-23T14:35:20+00:00'
+run_id: d5f9f5cb70bd49a38adb9b1ee04bdfc1
+created_at: '2026-11-24T15:15:37+00:00'
 topic: prostate
 final: true
 git:
-  commit: 24b19127eef5842fc3710ec7c2e8c93800ea9e77
+  commit: d03bb1b3624c07214f9e8c0b4c7f9159573f9107
   dirty: true
 docker_image: null
 python: 3.11.18
@@ -14,13 +14,13 @@ packages:
   pyarrow: 26.0.1
   scikit-learn: 1.9.1
   joblib: 1.6.0
-  wandb: 0.31.2
+  mlflow: 3.18.0
 seed: 510
 data:
   uri: data/clean/prostate/clean.parquet
   sha256: acf3b1548941b961c6d628023a2ee4401b164fe67181c1411f1a38d44747c7a3
   rows: 3430
-  verified: false
+  verified: true
 config:
   seed: 510
   storage:
@@ -30,10 +30,10 @@ config:
     raw_dir: data/raw
     clean_dir: data/clean
     cache_dir: data/cache
-    raw_snapshot_uri: gs://<bucket>/raw/{date}/{topic}/{cycle}/{file}.xpt
+    raw_snapshot_uri: gs://<bucket>/raw/{date}/{topic}/{cycle}/{file}
   tracking:
-    project: screening-talk
-    entity: <team>
+    experiment: screening-talk
+    uri: sqlite:///mlflow.db
   serve:
     topics:
     - prostate
@@ -83,7 +83,7 @@ topic_config:
     psa_threshold_ng_ml: 4.0
     version: v1
     clean_uri: gs://<bucket>/clean/prostate/v1/clean.parquet
-    clean_sha256: <hash>
+    clean_sha256: acf3b1548941b961c6d628023a2ee4401b164fe67181c1411f1a38d44747c7a3
   split:
     train_cycles:
     - 2001-2002
