@@ -47,6 +47,9 @@ body { margin:0; font-family:"Source Sans Pro", -apple-system, "Segoe UI", sans-
 .bars .title { font-size:14px; color:var(--muted); margin:10px 0 2px; }
 .headline { font-size:21px; line-height:1.45; margin:4px 0 12px; }
 .headline b { color:var(--accent, #0f766e); }
+.headline .lead { display:block; font-weight:600; }
+.headline ul.points { margin:6px 0 0; padding-left:22px; }
+.headline ul.points li { margin:4px 0; }
 details.more { margin-top:12px; border-top:1px solid #e2e8f0; padding-top:12px; }
 details.more summary { list-style:none; cursor:pointer; display:inline-block; font-weight:700; font-size:16px; padding:10px 18px;
   border-radius:999px; border:2px solid var(--accent, #0f766e); color:var(--accent, #0f766e); user-select:none; }
@@ -232,7 +235,7 @@ function blocksHtml(blocks, color) {
       case "heading": return `<h3>${b.html}</h3>`;
       case "source": return `<p><b>${b.html}</b>${b.caption ? `<br><span class="cap">${esc(b.caption)}</span>` : ""}</p>`;
       case "caption": return `<p class="cap">${b.html}</p>`;
-      case "headline": return `<p class="headline">${b.html}</p>`;
+      case "headline": return `<div class="headline">${b.html}</div>`;
       case "more": return `<details class="more"><summary><span class="open">See more info</span><span class="close">Hide details</span></summary>` +
         `<div class="more-body">${blocksHtml(b.blocks, color)}</div></details>`;
       case "sources": return `<table class="srcs"><tr><th>Number</th><th>Where it comes from</th></tr>` +
