@@ -89,24 +89,27 @@ def test_every_option_opens_with_a_headline_then_see_more_with_sources():
             assert d[0]["type"] == "headline" and d[-1]["type"] == "more", op["id"]
             assert any(b["type"] == "sources" and b["rows"] for b in d[-1]["blocks"]), op["id"]
     heart = options(data, "heart")
-    assert re.search(r"Starting a statin would lower your chance of a heart attack or stroke by about <b>28%</b> "
-                     r"\(from [\d.]+% to [\d.]+% over 10 years\) and may add <b>about 1 year</b>", heart["statin"]["detail"][0]["html"])
-    assert "not been shown to add years" in heart["aspirin"]["detail"][0]["html"]
+    statin = heart["statin"]["detail"][0]["html"]
+    assert statin.startswith('<span class="lead">Starting a statin:</span><ul class="points">')
+    assert re.search(r"<li>Lowers your chance of a heart attack or stroke by about <b>28%</b> "
+                     r"\(from [\d.]+% to [\d.]+% over 10 years\)</li><li>May add <b>about 1 year</b> to your life</li>", statin)
+    assert "<li>Has <b>not been shown to add years</b> of life</li>" in heart["aspirin"]["detail"][0]["html"]
+    assert "<li>Raises your chance of serious bleeding" in heart["aspirin"]["detail"][0]["html"]
 
 
 def test_lifestyle_branch_for_smokers_and_non_smokers():
     smoker = options(explorer.payload(MAN, set(), {}), "heart")
     head = smoker["quit_smoking"]["detail"][0]["html"]
-    assert "Quitting smoking would lower your chance of a heart attack or stroke" in head and "<b>4 years</b>" in head  # quit at 55-64
+    assert "Quitting smoking:" in head and "<li>Lowers your chance of a heart attack or stroke" in head and "<b>4 years</b>" in head  # quit at 55-64
     never = options(explorer.payload({**MAN, "current_smoker": "0"}, set(), {}), "heart")
     assert "You don&#x27;t smoke now" in never["quit_smoking"]["detail"][0]["html"]
     assert "150 to 300 minutes a week of vigorous" in str(smoker["exercise"]["detail"])
-    assert "Losing 10 pounds would lower your top blood pressure number by about <b>5 points</b>" in smoker["weight_loss"]["detail"][0]["html"]
+    assert "<li>Lowers your top blood pressure number by about <b>5 points</b></li>" in smoker["weight_loss"]["detail"][0]["html"]
 
 
 def test_stool_test_and_sigmoidoscopy_use_their_own_trials():
     colon = options(explorer.payload(MAN, set(), {}), "colorectal")
     assert list(colon) == ["colonoscopy", "fobt", "sigmoidoscopy"]
-    assert "dying of colorectal cancer by about <b>32%</b>" in colon["fobt"]["detail"][0]["html"]
+    assert "<li>Lowers your chance of dying of colorectal cancer by about <b>32%</b>" in colon["fobt"]["detail"][0]["html"]
     sig = colon["sigmoidoscopy"]["detail"][0]["html"]
-    assert "getting colorectal cancer by about <b>21%</b>" in sig and "dying of it by about <b>20%</b>" in sig
+    assert "diagnosed with colorectal cancer by about <b>21%</b>" in sig and "dying of colorectal cancer by about <b>20%</b>" in sig
