@@ -9,7 +9,7 @@ prostate cancer (PSA test) and colorectal cancer (colonoscopy).
 
 ## Links
 - **Dataset:** NHANES public files (see `topics/*.yaml`). Cleaned data in Google Cloud Storage: `gs://screening-talk-2611-data/clean/<topic>/v1/clean.parquet` (prostate, heart, colorectal), dated raw copies in `gs://screening-talk-2611-data/raw/2026-11-23/`, SHA-256 per file in `data/raw/MANIFEST.json`
-- **Deployed API:** https://<service>.run.app _(placeholder until the Cloud Run deploy runs)_
+- **Deployed API:** https://screening-talk-api-ot2dnn2fka-ue.a.run.app (Cloud Run, `us-east1`; try `https://screening-talk-api-ot2dnn2fka-ue.a.run.app/health`)
 - **Public app:** https://screening-talk.streamlit.app
 - **Demo video:** `docs/demo.mp4` _(85 seconds: questionnaire, heart, prostate, colonoscopy)_
 - **Experiment tracking:** MLflow, see [Experiment tracking](#experiment-tracking)
@@ -76,7 +76,7 @@ A topic without a trained model still answers with the trial results. People out
 2. Actions tab, "deploy API to Cloud Run", Run workflow. It trains the models from the public NHANES files, builds
    the image with them inside, deploys `screening-talk-api` and smoke-tests the live URL (output in the run summary).
 3. Streamlit Community Cloud: new app from this repo, main file `app/streamlit_app.py`, and in the app's secrets
-   `API_URL = "https://<service>.run.app"`.
+   `API_URL = "https://screening-talk-api-ot2dnn2fka-ue.a.run.app"`.
 
 ## Evidence
 Every number shown in the app comes from `evidence/*.json`, with a source URL and table or page reference.
@@ -98,7 +98,7 @@ Alberto owns the early pipeline work so sam can build serving on top of it.
 - [x] Heart model: `topics/heart.yaml`, NHANES 1999-2008 linked mortality, 10-year CVD death target, `src/train_heart.py`
 - [x] API + Docker: `src/api/` (`POST /predict`, `GET /health`, `GET /topics`), `Dockerfile`, `entrypoint.sh`, `tests/test_api.py`
 - [x] CI: `.github/workflows/ci.yml` runs pytest on every pull request (keep it green)
-- [ ] Deployment: Cloud Run service, `scripts/smoke_test.py`, paste output below
+- [x] Deployment: Cloud Run service, `scripts/smoke_test.py`, paste output below
 - [ ] Front end: `app/streamlit_app.py` calling the live API, deployed on Streamlit Community Cloud
 
 ### Both
@@ -131,7 +131,16 @@ What this means:
   For colorectal the app uses US cancer-registry (SEER) rates by age and sex, raised by published relative risks,
   because the NHANES target is "ever had" cancer, not a 10-year forecast.
 
-Smoke test against the live API: _(pasted by the deploy workflow run summary)_
+Smoke test against the live API (deploy run on Nov 23, 2026, [run log](https://github.com/samuelmteshome/screening-talk-510-project-3/actions/runs/45290145824)):
+
+```
+Live API: https://screening-talk-api-ot2dnn2fka-ue.a.run.app
+GET /health  -> 200  {"status": "ok", "models_loaded": ["colorectal", "heart", "prostate"], "errors": {}}
+GET /topics  -> 200  prostate (50-69, male), heart (40-75), colorectal (45-79); model_loaded: true for all 3
+POST /predict prostate   -> 200  probability 0.0442 (44 per 1,000 with a PSA of 4.0 or higher)
+POST /predict heart      -> 200  probability 0.0242 (24 per 1,000 die of heart disease or stroke in 10 years)
+POST /predict colorectal -> 200  probability 0.0063 (6 per 1,000 have had colon or rectal cancer)
+```
 
 ## Limits
 - NHANES is a snapshot. Prostate (PSA at the visit) and colorectal (ever told you had it) are cross-sectional; only
