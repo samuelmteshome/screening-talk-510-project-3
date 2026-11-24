@@ -1,7 +1,7 @@
 {
   "topic": "colorectal",
-  "run_id": "upo2vomm",
-  "created_at": "2026-11-23T14:35:40+00:00",
+  "run_id": "f2b022d4c9754f61b80004b21082c119",
+  "created_at": "2026-11-24T15:16:15+00:00",
   "target": "ever_crc",
   "features": [
     "age",
@@ -62,7 +62,7 @@
     "uri": "data/clean/colorectal/clean.parquet",
     "sha256": "e45353e4b0e7f720cc2ecde9964de9e383ee7857536fb4a43c41d4306e71166f",
     "rows": 27284,
-    "verified": false
+    "verified": true
   },
   "survey_weights": false,
   "intended_use": "Educational demo for patient-doctor conversations. Not medical advice."

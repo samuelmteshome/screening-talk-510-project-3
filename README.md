@@ -101,6 +101,12 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db   # open http://127.0.0.1:5000
 ```
 Set `MLFLOW_TRACKING_URI` to log to a remote MLflow server instead of the local `mlflow.db` / `mlruns/`.
 
+The training workflow keeps `mlflow.db` and `mlruns/` as a downloadable artifact (Actions tab, latest
+"train all models" run) and saves these screenshots of its MLflow UI:
+
+![MLflow runs for all three models](docs/mlflow/runs.png)
+![Final heart run: parameters and metrics](docs/mlflow/run.png)
+
 ## Cloud services
 | Service | Use |
 |---|---|
